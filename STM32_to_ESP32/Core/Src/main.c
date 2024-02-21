@@ -140,6 +140,7 @@ int main(void)
 	      Packet p = {id, data[id], time};
 	      send(&p);
 	      reset();
+	      // delay 50 ms, can change
 	      HAL_Delay(50);
 	    }
 
