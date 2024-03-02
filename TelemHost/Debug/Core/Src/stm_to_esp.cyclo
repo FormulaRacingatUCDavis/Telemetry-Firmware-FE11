@@ -1,0 +1,6 @@
+../Drivers/CMSIS/Include/core_cm7.h:2024:22:__NVIC_SetPriority	2
+../Drivers/CMSIS/Include/core_cm7.h:2564:26:SysTick_Config	2
+../Core/Src/stm_to_esp.c:20:6:timer_init	1
+../Core/Src/stm_to_esp.c:25:6:read_send_loop	11
+../Core/Src/stm_to_esp.c:55:6:reset	2
+../Core/Src/stm_to_esp.c:65:6:send	1
