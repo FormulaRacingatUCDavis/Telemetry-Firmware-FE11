@@ -5,6 +5,28 @@ unsigned long timer;
 unsigned long currTime;
 long loopTime = 5000;  // in microseconds
 
+// for testing
+void printPacket(uint8_t* packet) {
+  uint16_t id = 50;
+  uint16_t vals[4];
+  uint32_t tval = 10;
+
+  memcpy(&id, packet, 2);
+  memcpy(vals, packet+2, 8);
+  memcpy(&tval, packet+10, 4);
+
+  Serial.print("id = ");
+  Serial.println(id);
+  for (int i = 0; i < 4; i++) {
+    Serial.print("vals[");
+    Serial.print(i);
+    Serial.print("] = ");
+    Serial.println(vals[i]);
+  }
+  Serial.print("time = ");
+  Serial.println(tval);
+}
+
 void setup() {
   // Initialize Serial Connection to PC
   Serial.begin(38400);
@@ -45,5 +67,10 @@ void timeSync(unsigned long deltaT) {
 // callback function that will be executed when data is received
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   timeSync(loopTime);
-  Serial.write(incomingData, len);
+
+  // Send to graphing
+  // Serial.write(incomingData, len);
+  
+  // Print to serial moniter
+  printPacket(incomingData);
 }

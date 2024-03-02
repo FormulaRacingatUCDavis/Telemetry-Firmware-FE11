@@ -4,6 +4,16 @@
 #define RXD2 16
 #define TXD2 17
 
+// can include the class directly without Packet.h
+// class Packet {
+//  public:
+//   static const size_t length = 14;
+//   int data_id;
+//   short* data;
+//   unsigned long time;
+//   Packet(int id, short* d, unsigned long t) : data_id(id), data(d), time(t) {};
+// }; 
+
 esp_now_peer_info_t peerInfo;
 
 // REPLACE WITH YOUR RECEIVER MAC Address
@@ -16,9 +26,26 @@ uint8_t broadcastAddress[] = {0x94, 0x3C, 0xC6, 0x34, 0x6E, 0x68};
 uint8_t data[Packet::length];
 
 // for testing
-uint16_t id = 50;
-uint16_t vals[4];
-uint32_t tval = 10;
+void printPacket(uint8_t* packet) {
+  uint16_t id = 50;
+  uint16_t vals[4];
+  uint32_t tval = 10;
+
+  memcpy(&id, packet, 2);
+  memcpy(vals, packet+2, 8);
+  memcpy(&tval, packet+10, 4);
+
+  Serial.print("id = ");
+  Serial.println(id);
+  for (int i = 0; i < 4; i++) {
+    Serial.print("vals[");
+    Serial.print(i);
+    Serial.print("] = ");
+    Serial.println(vals[i]);
+  }
+  Serial.print("time = ");
+  Serial.println(tval);
+}
 
 void setup() {
   Serial.begin(115200);  // for debugging
@@ -54,20 +81,7 @@ void loop() {
     
     Serial.println(result == ESP_OK ? "Sent with success" : "Error sending the data");
 
-    memcpy(&id, data, 2);
-    memcpy(vals, data+2, 8);
-    memcpy(&tval, data+10, 4);
-
-    Serial.print("id = ");
-    Serial.println(id);
-    for (int i = 0; i < 4; i++) {
-      Serial.print("vals[");
-      Serial.print(i);
-      Serial.print("] = ");
-      Serial.println(vals[i]);
-    }
-    Serial.print("time = ");
-    Serial.println(tval);
+    printPacket(data);
   }
 }
 
