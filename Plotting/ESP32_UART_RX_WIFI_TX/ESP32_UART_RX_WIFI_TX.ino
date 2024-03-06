@@ -20,7 +20,8 @@ esp_now_peer_info_t peerInfo;
 // 24:0A:C4:61:50:C8 transceiver
 // 24:6F:28:7A:93:44 old test esp32
 // 94:3C:C6:34:6E:68 new test esp32
-uint8_t broadcastAddress[] = {0x94, 0x3C, 0xC6, 0x34, 0x6E, 0x68};
+// uint8_t broadcastAddress[] = {0x94, 0x3C, 0xC6, 0x34, 0x6E, 0x68};
+uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0x61, 0x50, 0xC8};
 
 // buffer for receiving and sending packets
 uint8_t data[Packet::length];

@@ -6,7 +6,7 @@ unsigned long currTime;
 long loopTime = 5000;  // in microseconds
 
 // for testing
-void printPacket(uint8_t* packet) {
+void printPacket(const uint8_t* packet) {
   uint16_t id = 50;
   uint16_t vals[4];
   uint32_t tval = 10;
@@ -69,8 +69,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   timeSync(loopTime);
 
   // Send to graphing
-  // Serial.write(incomingData, len);
+  Serial.write(incomingData, len);
   
   // Print to serial moniter
-  printPacket(incomingData);
+  // printPacket(incomingData);
 }

@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := TelemHost
+BUILD_ARTIFACT_NAME := Dash_TelemHost_STM32
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-TelemHost.elf \
+Dash_TelemHost_STM32.elf \
 
 MAP_FILES += \
-TelemHost.map \
+Dash_TelemHost_STM32.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-TelemHost.list \
+Dash_TelemHost_STM32.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: TelemHost.elf secondary-outputs
+main-build: Dash_TelemHost_STM32.elf secondary-outputs
 
 # Tool invocations
-TelemHost.elf TelemHost.map: $(OBJS) $(USER_OBJS) C:\ECS\FRUCD\STM32CubeIDE\TelemHost\STM32F746ZGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "TelemHost.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\ECS\FRUCD\STM32CubeIDE\TelemHost\STM32F746ZGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="TelemHost.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Dash_TelemHost_STM32.elf Dash_TelemHost_STM32.map: $(OBJS) $(USER_OBJS) C:\ECS\FRUCD\STM32CubeIDE\Telemetry-Firmware-FE11\Dash_TelemHost_STM32\STM32F746ZGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Dash_TelemHost_STM32.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"C:\ECS\FRUCD\STM32CubeIDE\Telemetry-Firmware-FE11\Dash_TelemHost_STM32\STM32F746ZGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Dash_TelemHost_STM32.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-TelemHost.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "TelemHost.list"
+Dash_TelemHost_STM32.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Dash_TelemHost_STM32.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) TelemHost.elf TelemHost.list TelemHost.map default.size.stdout
+	-$(RM) Dash_TelemHost_STM32.elf Dash_TelemHost_STM32.list Dash_TelemHost_STM32.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

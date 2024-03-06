@@ -192,7 +192,7 @@ def main():
 
     # initialize animation that will continuously update until closed
     anim = Anim(animation.FuncAnimation(fig, s.getSerialData, fargs=(
-        ax, lines, lineValueText, lineLabel, intervalText, timeRange), interval=pltInterval))
+        ax, lines, lineValueText, lineLabel, intervalText, timeRange), interval=pltInterval, cache_frame_data=False))
     fig.canvas.mpl_connect('key_press_event', anim.togglePause)
     plt.show()
     s.close()
