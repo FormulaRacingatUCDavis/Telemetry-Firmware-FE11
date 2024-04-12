@@ -1,6 +1,8 @@
 #ifndef SRC_STM_TO_ESP_H_
 #define SRC_STM_TO_ESP_H_
 
+#include "main.h"
+
 #define PACKET_LENGTH 16
 
 typedef struct __attribute__((__packed__)) Packet {

@@ -1,5 +1,4 @@
 #include <stdint.h>
-#include "stm32f7xx_hal.h"
 #include "stm_to_esp.h"
 
 // Global variables
@@ -49,8 +48,8 @@ void read_send_loop(void) {
 		    			{data[id][0], data[id][1], data[id][2], data[id][3]}, time};
 		    HAL_UART_Transmit(&huart7, (uint8_t*)&p, PACKET_LENGTH, 1000);
 		    reset();
-		    // delay 50 ms, can change
-		    HAL_Delay(50);
+		    // delay 20 ms, can't send too fast
+		    HAL_Delay(20);
 		}
 	}
 }
