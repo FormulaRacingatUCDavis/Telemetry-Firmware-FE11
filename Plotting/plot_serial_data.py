@@ -14,7 +14,6 @@ import matplotlib.animation as animation
 import struct
 import sys
 import copy
-import sys
 
 
 class serialPlot:
