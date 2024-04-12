@@ -7,14 +7,23 @@ long loopTime = 5000;  // in microseconds
 
 // for testing
 void printPacket(const uint8_t* packet) {
+  // values that shouldn't be sent over
+  uint8_t valid[2] = {0x0f, 0x0f};
   uint16_t id = 50;
   uint16_t vals[4];
   uint32_t tval = 10;
 
-  memcpy(&id, packet, 2);
-  memcpy(vals, packet+2, 8);
-  memcpy(&tval, packet+10, 4);
+  memcpy(valid, packet, 2);
+  memcpy(&id, packet+2, 2);
+  memcpy(vals, packet+4, 8);
+  memcpy(&tval, packet+12, 4);
 
+  for (int i = 0; i < 2; i++) {
+    Serial.print("valid[");
+    Serial.print(i);
+    Serial.print("] = ");
+    Serial.println(valid[i]);
+  }
   Serial.print("id = ");
   Serial.println(id);
   for (int i = 0; i < 4; i++) {

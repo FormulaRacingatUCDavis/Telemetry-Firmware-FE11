@@ -4,9 +4,10 @@
 
 // Global variables
 int canId;
+uint8_t valid[2] = {0x00, 0xff};
 uint16_t id = -1;
 uint16_t data[2][4];
-char wheelUpdated[4] = {0, 0, 0, 0};
+uint8_t wheelUpdated[4] = {0, 0, 0, 0};
 uint32_t time;
 uint32_t startTime;
 
@@ -40,11 +41,13 @@ void read_send_loop(void) {
 		    data[id][0] = fakeData;
 		}
 
-		if (id == 1 || (id == 0 && wheelUpdated[0] && wheelUpdated[1] && wheelUpdated[2] && wheelUpdated[3])) {
+		if (id == 1 || (id == 0 && wheelUpdated[0] && wheelUpdated[1]
+								&& wheelUpdated[2] && wheelUpdated[3])) {
 			// enough data received to send a packet
 		    time = HAL_GetTick() - startTime;
-		    Packet p = {id, data[id], time};
-		    send(&p);
+		    Packet p = {{valid[0], valid[1]}, id,
+		    			{data[id][0], data[id][1], data[id][2], data[id][3]}, time};
+		    HAL_UART_Transmit(&huart7, (uint8_t*)&p, PACKET_LENGTH, 1000);
 		    reset();
 		    // delay 50 ms, can change
 		    HAL_Delay(50);
@@ -60,26 +63,4 @@ void reset() {
     wheelUpdated[3] = 0;
   }
   id = -1;
-}
-
-void send(Packet* p) {
-  char* byteId = (char*)(&(p->data_id));
-  char* byteData = (char*)(p->data);
-  char* byteTime = (char*)(&(p->time));
-  uint8_t buf[PACKET_LENGTH];
-  buf[0] = byteId[0];
-  buf[1] = byteId[1];
-  buf[2] = byteData[0];
-  buf[3] = byteData[1];
-  buf[4] = byteData[2];
-  buf[5] = byteData[3];
-  buf[6] = byteData[4];
-  buf[7] = byteData[5];
-  buf[8] = byteData[6];
-  buf[9] = byteData[7];
-  buf[10] = byteTime[0];
-  buf[11] = byteTime[1];
-  buf[12] = byteTime[2];
-  buf[13] = byteTime[3];
-  HAL_UART_Transmit(&huart7, buf, PACKET_LENGTH, 1000);
 }

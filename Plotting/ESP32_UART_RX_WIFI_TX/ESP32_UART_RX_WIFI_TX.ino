@@ -7,35 +7,45 @@
 // can include the class directly without Packet.h
 // class Packet {
 //  public:
-//   static const size_t length = 14;
+//   static const size_t length = 16;
+//   char* validation;
 //   int data_id;
 //   short* data;
 //   unsigned long time;
-//   Packet(int id, short* d, unsigned long t) : data_id(id), data(d), time(t) {};
-// }; 
+//   Packet(char* vd, int id, short* d, unsigned long t) : validation(vd), data_id(id), data(d), time(t) {};
+// };
 
 esp_now_peer_info_t peerInfo;
 
 // REPLACE WITH YOUR RECEIVER MAC Address
 // 24:0A:C4:61:50:C8 transceiver
-// 24:6F:28:7A:93:44 old test esp32
-// 94:3C:C6:34:6E:68 new test esp32
-// uint8_t broadcastAddress[] = {0x94, 0x3C, 0xC6, 0x34, 0x6E, 0x68};
-uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0x61, 0x50, 0xC8};
+// 24:6F:28:7A:93:44 test esp32 labeled '2'
+// 94:3C:C6:34:6E:68 test esp32 unlabeled
+uint8_t broadcastAddress[] = {0x24, 0x6F, 0x28, 0x7A, 0x93, 0x44};
+// uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0x61, 0x50, 0xC8};
 
 // buffer for receiving and sending packets
 uint8_t data[Packet::length];
 
 // for testing
-void printPacket(uint8_t* packet) {
+void printPacket(const uint8_t* packet) {
+  // values that shouldn't be sent over
+  uint8_t valid[2] = {0x0f, 0x0f};
   uint16_t id = 50;
   uint16_t vals[4];
   uint32_t tval = 10;
 
-  memcpy(&id, packet, 2);
-  memcpy(vals, packet+2, 8);
-  memcpy(&tval, packet+10, 4);
+  memcpy(valid, packet, 2);
+  memcpy(&id, packet+2, 2);
+  memcpy(vals, packet+4, 8);
+  memcpy(&tval, packet+12, 4);
 
+  for (int i = 0; i < 2; i++) {
+    Serial.print("valid[");
+    Serial.print(i);
+    Serial.print("] = ");
+    Serial.println(valid[i]);
+  }
   Serial.print("id = ");
   Serial.println(id);
   for (int i = 0; i < 4; i++) {
@@ -77,12 +87,17 @@ void setup() {
 
 void loop() {
   if (Serial2.available() >= Packet::length) { 
-    Serial2.readBytes(data, Packet::length);
-    esp_err_t result = esp_now_send(broadcastAddress, data, Packet::length);
+    Serial2.readBytes(data, 1);
+    if (data[0] == 0x00) {
+      Serial2.readBytes(data+1, 1);
+      if (data[1] == 0xff) {
+        Serial2.readBytes(data+2, Packet::length - 2);
+        esp_err_t result = esp_now_send(broadcastAddress, data, Packet::length);
     
-    Serial.println(result == ESP_OK ? "Sent with success" : "Error sending the data");
-
-    printPacket(data);
+        Serial.println(result == ESP_OK ? "Sent with success" : "Error sending the data");
+        printPacket(data);
+      }
+    }
   }
 }
 

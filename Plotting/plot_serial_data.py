@@ -75,13 +75,16 @@ class serialPlot:
         intervalText.set_text('Plot Interval = ' + str(self.plotTimer) + 'ms')
 
         # packet structure:
-        # byte 0-1: data id (uint16_t)
-        # byte 2-9: data (4 uint16_t)
-        # byte 10-13: time (uint32_t)
+        # byte 0-1: validation (2 uint8_t)
+        # byte 2-3: data id (uint16_t)
+        # byte 4-11: data (4 uint16_t)
+        # byte 12-15: time (uint32_t)
 
-        # first check data id
-        dataId = struct.unpack('h', currData[:2])[0]
-        if (dataId not in range(self.numDataTypes)):
+        # check valid packet
+        valid = currData[:2]
+        # check data id
+        dataId = struct.unpack('h', currData[2:4])[0]
+        if (dataId not in range(self.numDataTypes) or valid[0] != 0x00 or valid[1] != 0xff):
             # data is bad, reset buffer
             self.serialConnection.reset_input_buffer()
             self.prevData = None
@@ -89,12 +92,12 @@ class serialPlot:
 
         # read the rest of the packet
         # convert milliseconds to seconds
-        newTime = struct.unpack('L', currData[10:14])[0] / 1000
+        newTime = struct.unpack('L', currData[12:])[0] / 1000
         self.data[dataId][0].append(newTime)
         for j in range(self.typeNumVals[dataId]):
             # put each data value in the corresponding array
             value = struct.unpack(
-                'h', currData[2+j*self.valNumBytes:2+(j+1)*self.valNumBytes])[0]
+                'h', currData[4+j*self.valNumBytes:4+(j+1)*self.valNumBytes])[0]
             # may want to do the speed conversions here instead of on the teensy
             self.data[dataId][j+1].append(value)
             lines[dataId][j].set_data(
@@ -142,7 +145,7 @@ def main():
     baudRate = 38400
     maxPlotLength = 1000  # max length of the data arrays
     timeRange = 20  # in seconds
-    packetNumBytes = 14
+    packetNumBytes = 16
     numDataTypes = 2
     typeNumVals = [4, 1]  # number of data values for each data type
     valNumBytes = 2  # short
