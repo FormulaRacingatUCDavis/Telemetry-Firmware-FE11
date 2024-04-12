@@ -2,7 +2,6 @@
 # Input port name as command line argument, can use get_serial_ports.py to find ports
 # Can press any key to pause the plotting, pressing again will resume at present time
 # If no data shows up, try running it again or unplugging and replugging the transceiver
-# It sometimes draws lines from bad data at the beginning, currently not able to avoid completely
 # Time value is seconds that the board has been running
 
 from threading import Thread
@@ -173,7 +172,7 @@ def main():
 
     # time axis
     ax[0].set_xbound(xmin, xmax)
-    ax[numDataTypes - 1].set_xlabel("Time")
+    ax[numDataTypes - 1].set_xlabel("Time (s)")
 
     lines = []
     lineValueText = []
