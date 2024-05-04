@@ -78,8 +78,8 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   timeSync(loopTime);
 
   // Send to graphing
-  Serial.write(incomingData, len);
+  // Serial.write(incomingData, len);
   
   // Print to serial moniter
-  // printPacket(incomingData);
+  printPacket(incomingData);
 }

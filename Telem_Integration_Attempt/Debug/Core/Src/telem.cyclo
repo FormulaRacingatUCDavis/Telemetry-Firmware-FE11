@@ -1,0 +1,2 @@
+../Core/Src/telem.c:14:6:telem_send	3
+../Core/Src/telem.c:54:6:telem_reset	2

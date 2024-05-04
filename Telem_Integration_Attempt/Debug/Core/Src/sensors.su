@@ -1,0 +1,17 @@
+../Core/Src/sensors.c:23:6:init_sensors	4	static
+../Core/Src/sensors.c:39:6:select_adc_channel	32	static
+../Core/Src/sensors.c:92:10:get_adc_conversion	24	static
+../Core/Src/sensors.c:112:6:run_calibration	8	static
+../Core/Src/sensors.c:118:6:update_sensor_vals	16	static
+../Core/Src/sensors.c:150:10:requested_throttle	16	static
+../Core/Src/sensors.c:167:6:temp_attenuate	16	static
+../Core/Src/sensors.c:178:6:sensors_calibrated	4	static
+../Core/Src/sensors.c:185:6:braking	4	static
+../Core/Src/sensors.c:189:6:brake_mashed	4	static
+../Core/Src/sensors.c:196:6:has_discrepancy	4	static
+../Core/Src/sensors.c:209:6:brake_implausible	4	static
+../Core/Src/sensors.c:222:6:update_percent	24	static
+../Core/Src/sensors.c:227:6:update_minmax	16	static
+../Core/Src/sensors.c:233:6:add_apps_deadzone	8	static
+../Core/Src/sensors.c:239:6:add_deadzone	24	static
+../Core/Src/sensors.c:249:10:clamp	16	static

@@ -1,0 +1,13 @@
+../Core/Src/ugui_SSD1963.c:68:6:SSD1963_Reset	1
+../Core/Src/ugui_SSD1963.c:74:6:SSD1963_Init	1
+../Core/Src/ugui_SSD1963.c:145:6:SSD1963_WindowSet	1
+../Core/Src/ugui_SSD1963.c:165:6:SSD1963_PSet	5
+../Core/Src/ugui_SSD1963.c:173:6:SSD1963_WriteMemoryStart	1
+../Core/Src/ugui_SSD1963.c:178:6:SSD1963_ConsecutivePSet	1
+../Core/Src/ugui_SSD1963.c:183:11:HW_FillFrame	11
+../Core/Src/ugui_SSD1963.c:204:11:HW_DrawLine	11
+../Core/Src/ugui_SSD1963.c:220:11:HW_DrawImage	9
+../Core/Src/ugui_SSD1963.c:299:6:write_command	2
+../Core/Src/ugui_SSD1963.c:306:6:write_data	2
+../Core/Src/ugui_SSD1963.c:313:10:read_data	1
+../Core/Src/ugui_SSD1963.c:318:6:write_multi_data	3

@@ -86,6 +86,7 @@ void setup() {
 }
 
 void loop() {
+  
   if (Serial2.available() >= Packet::length) { 
     Serial2.readBytes(data, 1);
     if (data[0] == 0x00) {

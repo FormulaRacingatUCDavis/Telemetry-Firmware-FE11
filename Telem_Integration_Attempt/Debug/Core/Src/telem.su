@@ -1,0 +1,2 @@
+../Core/Src/telem.c:14:6:telem_send	24	static
+../Core/Src/telem.c:54:6:telem_reset	4	static

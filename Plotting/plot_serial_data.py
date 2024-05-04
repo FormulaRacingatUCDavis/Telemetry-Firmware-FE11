@@ -145,7 +145,7 @@ def main():
     timeRange = 20  # in seconds
     packetNumBytes = 16
     numDataTypes = 2
-    typeNumVals = [4, 1]  # number of data values for each data type
+    typeNumVals = [4, 4]  # number of data values for each data type
     valNumBytes = 2  # short
     s = serialPlot(portName, baudRate, maxPlotLength, packetNumBytes,
                    numDataTypes, typeNumVals, valNumBytes)  # initialize variables
@@ -164,10 +164,11 @@ def main():
 
     # labels and colors
     plt.suptitle("Live Telemetry Data")
-    plotLabel = ['Wheel Speed (MPH?)', 'Steering Angle (Degrees?)']
-    legLabel = [['Front Left', 'Front Right',
-                 'Rear Left', 'Rear Right'], ['Angle']]
-    lineLabel = [['FL', 'FR', 'RL', 'RR'], ['Angle']]
+    plotLabel = ['Wheel Speed (CPS)',
+                 'Cooling Loop Temperature/Pressure (C/PSI)']
+    legLabel = [['Front Right', 'Front Left', 'Rear Right', 'Rear Left'],
+                ['Inlet Temp', 'Outlet Temp', 'Inlet Pres', 'Outlet Pres']]
+    lineLabel = [['FR', 'FL', 'RR', 'RL'], ['IT', 'OT', 'IP', 'OP']]
     style = ['r-', 'g-', 'b-', 'y-']  # colors for the different lines
 
     # time axis

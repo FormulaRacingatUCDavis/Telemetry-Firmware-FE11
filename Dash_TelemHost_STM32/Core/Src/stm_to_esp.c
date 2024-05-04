@@ -11,7 +11,7 @@ uint32_t time;
 uint32_t startTime;
 
 // Temp for simulation
-int canIdVals[] = {0x470, 0x471, 0x472, 0x473, 0x475};
+int canIdVals[] = {0x470, 0x471, 0x472, 0x473, 0x400};
 int canIdIndex = 0;
 
 // UART
@@ -34,10 +34,11 @@ void read_send_loop(void) {
 		    // could include math here to convert sensor data to speed
 		    data[id][canId - 0x470] = fakeData;
 		    wheelUpdated[canId - 0x470] = 1;
-		} else if (canId == 0x475) {
-		    // steering data
+		} else if (canId == 0x400) {
+		    // temp data
 		    id = 1;
 		    data[id][0] = fakeData;
+		    data[id][1] = fakeData;
 		}
 
 		if (id == 1 || (id == 0 && wheelUpdated[0] && wheelUpdated[1]

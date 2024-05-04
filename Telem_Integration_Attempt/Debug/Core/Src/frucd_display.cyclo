@@ -1,0 +1,12 @@
+../Core/Src/frucd_display.c:69:6:Display_Init	1
+../Core/Src/frucd_display.c:87:6:Display_CalibrateScreen	1
+../Core/Src/frucd_display.c:95:6:Display_DebugTemplate	1
+../Core/Src/frucd_display.c:176:6:Display_DriveTemplate	1
+../Core/Src/frucd_display.c:221:6:Display_Update	1
+../Core/Src/frucd_display.c:234:6:draw_soc	1
+../Core/Src/frucd_display.c:239:6:draw_bms_temp	1
+../Core/Src/frucd_display.c:244:6:draw_state	33
+../Core/Src/frucd_display.c:374:6:draw_glv_v	3
+../Core/Src/frucd_display.c:396:10:value_to_color	8
+../Core/Src/frucd_display.c:438:6:draw_value_textbox	2
+../Core/Src/frucd_display.c:454:6:draw_textbox	6
