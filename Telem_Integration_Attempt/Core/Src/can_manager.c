@@ -15,6 +15,7 @@ volatile uint8_t soc;
 volatile uint16_t bms_status;
 volatile uint8_t mc_fault_clear_success = 0;
 volatile uint16_t pack_voltage;
+volatile uint16_t motor_temp;
 
 volatile uint16_t front_right_wheel_speed = 0;
 volatile uint16_t front_left_wheel_speed = 0;
@@ -104,6 +105,15 @@ void save_can_rx_data(CAN_RxHeaderTypeDef RxHeader, uint8_t RxData[]) {
 			outlet_pres = (RxData[6] << 8);
 			outlet_pres += RxData[7];
 			telem_id = 1;
+		case MC_MOTOR_POSITION:
+			rear_right_wheel_speed = (RxData[3] << 8) ;
+			rear_right_wheel_speed += RxData[2];
+			rear_right_wheel_speed *= -1;
+			break;
+		case MC_TEMP_3:
+			motor_temp = RxData[5] << 8;
+			motor_temp += RxData[4];
+			break;
 		default:
 			// no valid input received
 			break;
@@ -122,21 +132,23 @@ void can_tx_vcu_state(CAN_HandleTypeDef *hcan){
 	TxHeader.IDE = CAN_ID_STD;
 	TxHeader.StdId = VEHICLE_STATE;
 	TxHeader.RTR = CAN_RTR_DATA;
-	TxHeader.DLC = 6;
-	uint8_t data_tx_state[6] = {
+	TxHeader.DLC = 8;
+	uint8_t data_tx_state[8] = {
         0,
         hv_requested(),
         throttle1.percent,
         throttle2.percent,
 		brake.percent,
         one_byte_state(),
-
+		0,
+		0
     };
 
     if (HAL_CAN_AddTxMessage(hcan, &TxHeader, data_tx_state, &TxMailbox) != HAL_OK)
 	{
 	  print("CAN Tx failed\r\n");
 	}
+//    write_tx_to_sd(TxHeader, data_tx_state);
 }
 
 
@@ -150,10 +162,19 @@ void can_tx_torque_request(CAN_HandleTypeDef *hcan){
     uint16_t throttle_msg_byte = 0;
     if (state == DRIVE) {
     	uint16_t throttle_req = requested_throttle();
+
+    	// deadzoning
     	if (throttle_req  < 50) {
     		throttle_req = 0;
     	}
+
+    	// adjust throttle with traction control
         throttle_msg_byte = throttle_req - TC_torque_adjustment;
+
+        // zero throttle if brake is pressed at all, prevents hardware bspd
+        if (brake.raw >= (brake.min + BRAKE_BSPD_THRESHOLD)) {
+        	throttle_msg_byte = 0;
+        }
     }
 
     uint8_t byte5 = 0b010;   //speed mode | discharge_enable | inverter enable
@@ -178,6 +199,7 @@ void can_tx_torque_request(CAN_HandleTypeDef *hcan){
 	{
 	  print("CAN Tx failed\r\n");
 	}
+//    write_tx_to_sd(TxHeader, data_tx_torque);
 }
 
 
@@ -193,6 +215,7 @@ void can_tx_disable_MC(CAN_HandleTypeDef *hcan) {
 	{
 	  print("CAN Tx failed\r\n");
 	}
+//	write_tx_to_sd(TxHeader, data_tx_torque);
 }
 
 void can_clear_MC_fault(CAN_HandleTypeDef *hcan) {
@@ -217,4 +240,5 @@ void can_clear_MC_fault(CAN_HandleTypeDef *hcan) {
 	{
 	  print("CAN Tx failed\r\n");
 	}
+//	write_tx_to_sd(TxHeader, data_tx_param_command);
 }

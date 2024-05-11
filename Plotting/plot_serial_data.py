@@ -16,13 +16,14 @@ import copy
 
 
 class serialPlot:
-    def __init__(self, serialPort, serialBaud, plotLength, packetNumBytes, numDataTypes, typeNumVals, valNumBytes):
+    def __init__(self, serialPort, serialBaud, plotLength, packetNumBytes, numDataTypes, typeNumVals, valNumBytes, typeValMultiplier):
         self.port = serialPort
         self.baud = serialBaud
         self.packetNumBytes = packetNumBytes
         self.numDataTypes = numDataTypes
         self.typeNumVals = typeNumVals
         self.valNumBytes = valNumBytes
+        self.typeValMultiplier = typeValMultiplier
         self.rawData = bytearray(packetNumBytes)
         self.data = []
         for i in range(numDataTypes):
@@ -96,12 +97,12 @@ class serialPlot:
             # put each data value in the corresponding array
             value = struct.unpack(
                 'h', currData[4+j*self.valNumBytes:4+(j+1)*self.valNumBytes])[0]
-            # may want to do the speed conversions here instead of on the teensy
+            value *= self.typeValMultiplier[dataId]
             self.data[dataId][j+1].append(value)
             lines[dataId][j].set_data(
                 self.data[dataId][0], self.data[dataId][j+1])
-            lineValueText[dataId][j].set_text(
-                '[' + lineLabel[dataId][j] + '] = ' + str(value))
+            lineValueText[dataId][j].set_text(f"[{lineLabel[dataId][j]}] = {value:.1f}")
+
 
         # update x bounds to most recent data
         if self.prevData == None:
@@ -147,8 +148,10 @@ def main():
     numDataTypes = 2
     typeNumVals = [4, 4]  # number of data values for each data type
     valNumBytes = 2  # short
+    # multiplier to apply to each value to convert units
+    typeValMultiplier = [1, 0.1]
     s = serialPlot(portName, baudRate, maxPlotLength, packetNumBytes,
-                   numDataTypes, typeNumVals, valNumBytes)  # initialize variables
+                   numDataTypes, typeNumVals, valNumBytes, typeValMultiplier)  # initialize variables
     s.readSerialStart()  # starts background thread
     time.sleep(1.5)
 
@@ -157,7 +160,7 @@ def main():
 
     # bounds
     xmin, xmax = (0, timeRange)
-    ybounds = [[0, 50], [-50, 50]]  # value bounds for each data type
+    ybounds = [[0, 100], [0, 200]]  # value bounds for each data type
 
     fig, ax = plt.subplots(numDataTypes, sharex=True)
     fig.set_figheight(5.4)  # can change for larger figure

@@ -1,8 +1,8 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include "Packet.h"
-#define RXD2 16
-#define TXD2 17
+#define RXD2 17
+#define TXD2 16
 
 // can include the class directly without Packet.h
 // class Packet {
