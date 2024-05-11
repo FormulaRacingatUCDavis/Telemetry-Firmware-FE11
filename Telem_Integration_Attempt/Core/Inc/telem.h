@@ -10,6 +10,8 @@
 
 #define PACKET_LENGTH 16
 
+#define TELEM_DELAY 20
+
 typedef struct __attribute__((__packed__)) Packet {
 	uint8_t validation[2];
 	uint16_t data_id;
@@ -19,6 +21,5 @@ typedef struct __attribute__((__packed__)) Packet {
 
 // Function prototypes
 void telem_send(void);
-void telem_reset(void);
 
 #endif /* INC_TELEM_H_ */
