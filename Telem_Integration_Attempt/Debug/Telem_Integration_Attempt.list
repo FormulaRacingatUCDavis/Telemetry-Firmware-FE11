@@ -39,9 +39,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_line   00029220  00000000  00000000  00079edb  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    00107390  00000000  00000000  000a30fb  2**0
+ 18 .debug_str    0010738f  00000000  00000000  000a30fb  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  001aa48b  2**0
+ 19 .comment      00000043  00000000  00000000  001aa48a  2**0
                   CONTENTS, READONLY
  20 .debug_frame  00009010  00000000  00000000  001aa4d0  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
@@ -7978,7 +7978,7 @@ void telem_send(void) {
  8003ca8:	4b30      	ldr	r3, [pc, #192]	@ (8003d6c <telem_send+0xd8>)
  8003caa:	681b      	ldr	r3, [r3, #0]
  8003cac:	1ad3      	subs	r3, r2, r3
- 8003cae:	2b14      	cmp	r3, #20
+ 8003cae:	2b02      	cmp	r3, #2
  8003cb0:	d956      	bls.n	8003d60 <telem_send+0xcc>
 		Packet p = {{packet_validation[0], packet_validation[1]},
  8003cb2:	2300      	movs	r3, #0

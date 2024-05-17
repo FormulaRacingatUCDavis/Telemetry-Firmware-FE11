@@ -96,7 +96,7 @@ void loop() {
         esp_err_t result = esp_now_send(broadcastAddress, data, Packet::length);
     
         Serial.println(result == ESP_OK ? "Sent with success" : "Error sending the data");
-        printPacket(data);
+        // printPacket(data);
       }
     }
   }

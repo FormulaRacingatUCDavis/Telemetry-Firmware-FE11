@@ -101,8 +101,8 @@ class serialPlot:
             self.data[dataId][j+1].append(value)
             lines[dataId][j].set_data(
                 self.data[dataId][0], self.data[dataId][j+1])
-            lineValueText[dataId][j].set_text(f"[{lineLabel[dataId][j]}] = {value:.1f}")
-
+            lineValueText[dataId][j].set_text(
+                f"[{lineLabel[dataId][j]}] = {value:.1f}")
 
         # update x bounds to most recent data
         if self.prevData == None:
@@ -160,7 +160,7 @@ def main():
 
     # bounds
     xmin, xmax = (0, timeRange)
-    ybounds = [[0, 100], [0, 200]]  # value bounds for each data type
+    ybounds = [[0, 100], [24, 26]]  # value bounds for each data type
 
     fig, ax = plt.subplots(numDataTypes, sharex=True)
     fig.set_figheight(5.4)  # can change for larger figure
