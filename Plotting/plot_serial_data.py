@@ -5,7 +5,7 @@
 # Time value is seconds that the board has been running
 
 from threading import Thread
-import serial
+#import serial
 import time
 import collections
 import matplotlib.pyplot as plt
@@ -15,6 +15,8 @@ import struct
 import sys
 import copy
 from typing import NamedTuple
+
+import multiprocessing
 
 
 class serialPlot:
@@ -56,12 +58,16 @@ class serialPlot:
         self.serialConnection = 0
 
     def readSerialStart(self):
-        if self.thread == None:
+        '''if self.thread == None:
             self.thread = Thread(target=self.backgroundThread)
             self.thread.start()
             # Block till we start receiving values
             while self.isReceiving != True:
-                time.sleep(0.1)
+                time.sleep(0.1)'''
+
+        p1 = multiprocessing.Process(target=self.backgroundThread)
+        p1.start()
+        #p1.join()
 
     def getSerialData(self, frame, ax, lines, lineValueText, lineLabel, intervalText, timeRange):
         # make a copy of the current data in the buffer
@@ -122,6 +128,7 @@ class serialPlot:
         while (self.isRun):
             # self.serialConnection.readinto(self.rawData)
             self.isReceiving = True
+            print(1)
 
     def close(self):
         self.isRun = False
@@ -150,7 +157,7 @@ class GraphProfile(NamedTuple):
     ybounds: list
 
 def main():
-    portName = sys.argv[1]  # input port used as command line argument
+    portName = sys.argv[0]  # input port used as command line argument, FIXME: CHANGE BACK TO INDEX 1
     baudRate = 38400
 
     graphProfiles = []
@@ -192,12 +199,11 @@ def main():
     time.sleep(1.5)
 
     # plotting starts below
-    pltInterval = 10  # period at which the plot animation updates [ms]
+    pltInterval = 500  # period at which the plot animation updates [ms]
 
     # bounds
     xmin, xmax = (0, timeRange)
     ybounds = [[0, 100], [0, 200], [-100, 100]]  # value bounds for each data type
-
     numCols = math.ceil(numDataTypes/2)
     plotAxes = [0]*numCols
     fig, (plotAxes[0], plotAxes[1]) = plt.subplots(2, numCols, sharex=True)
@@ -246,7 +252,6 @@ def main():
     # use below for testing GUI without serial
     anim = Anim(animation.FuncAnimation(fig, lambda a,b,c,d,e,f,g : 1, fargs=(
         plotAxes[0], lines, lineValueText, list(), intervalText, timeRange), interval=pltInterval, cache_frame_data=False))
-
     fig.canvas.mpl_connect('key_press_event', anim.togglePause)
     plt.show()
     s.close()
