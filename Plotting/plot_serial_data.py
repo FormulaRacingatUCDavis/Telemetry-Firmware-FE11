@@ -4,7 +4,6 @@
 # If no data shows up, try running it again or unplugging and replugging the transceiver
 # Time value is seconds that the board has been running
 
-from threading import Thread
 #import serial
 import time
 import collections
@@ -15,7 +14,6 @@ import struct
 import sys
 import copy
 from typing import NamedTuple
-
 import multiprocessing
 
 
@@ -58,16 +56,8 @@ class serialPlot:
         self.serialConnection = 0
 
     def readSerialStart(self):
-        '''if self.thread == None:
-            self.thread = Thread(target=self.backgroundThread)
-            self.thread.start()
-            # Block till we start receiving values
-            while self.isReceiving != True:
-                time.sleep(0.1)'''
-
         p1 = multiprocessing.Process(target=self.backgroundThread)
         p1.start()
-        #p1.join()
 
     def getSerialData(self, frame, ax, lines, lineValueText, lineLabel, intervalText, timeRange):
         # make a copy of the current data in the buffer
@@ -128,7 +118,6 @@ class serialPlot:
         while (self.isRun):
             # self.serialConnection.readinto(self.rawData)
             self.isReceiving = True
-            print(1)
 
     def close(self):
         self.isRun = False
