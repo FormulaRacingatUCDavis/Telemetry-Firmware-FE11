@@ -34,9 +34,9 @@ class serialPlot:
                 # each data type has an array for each value of that type + time
                 # time is index 0
                 self.data[i].append(collections.deque([], maxlen=plotLength))
-        self.isRun = True
+        self.isRun = multiprocessing.Value('i', True)
         self.isReceiving = False
-        self.thread = None
+        self.process = None # multiprocess variable
         self.prevData = None
         self.plotTimer = 0
         self.previousTimer = 0
@@ -56,8 +56,8 @@ class serialPlot:
         self.serialConnection = 0
 
     def readSerialStart(self):
-        p1 = multiprocessing.Process(target=self.backgroundThread)
-        p1.start()
+        self.process = multiprocessing.Process(target=self.backgroundThread, args=(self.isRun,))
+        self.process.start()
 
     def getSerialData(self, frame, ax, lines, lineValueText, lineLabel, intervalText, timeRange):
         # make a copy of the current data in the buffer
@@ -112,16 +112,16 @@ class serialPlot:
             ax[0].set_xbound(newTime - timeRange, newTime)
         self.prevData = currData
 
-    def backgroundThread(self):  # retrieve data continuously
+    def backgroundThread(self, isRun):  # retrieve data continuously
         time.sleep(1.0)  # give some buffer time for retrieving data
         # self.serialConnection.reset_input_buffer()
-        while (self.isRun):
+        while (isRun.value):
             # self.serialConnection.readinto(self.rawData)
             self.isReceiving = True
 
     def close(self):
-        self.isRun = False
-        self.thread.join()
+        self.isRun.value = False
+        self.process.join()
         # self.serialConnection.close()
         print('Disconnected')
 
