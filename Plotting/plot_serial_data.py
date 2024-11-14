@@ -4,60 +4,60 @@
 # If no data shows up, try running it again or unplugging and replugging the transceiver
 # Time value is seconds that the board has been running
 
-from threading import Thread
-import serial
+#import serial
 import time
 import collections
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import math
 import struct
 import sys
 import copy
+from typing import NamedTuple
+import multiprocessing
 
 
 class serialPlot:
-    def __init__(self, serialPort, serialBaud, plotLength, packetNumBytes, numDataTypes, typeNumVals, valNumBytes, typeValMultiplier):
+    def __init__(self, serialPort, serialBaud, plotLength, packetNumBytes, numDataTypes, graphProfiles, valNumBytes, typeValMultiplier):
         self.port = serialPort
         self.baud = serialBaud
         self.packetNumBytes = packetNumBytes
         self.numDataTypes = numDataTypes
-        self.typeNumVals = typeNumVals
+        self.graphProfiles = graphProfiles
         self.valNumBytes = valNumBytes
         self.typeValMultiplier = typeValMultiplier
         self.rawData = bytearray(packetNumBytes)
         self.data = []
         for i in range(numDataTypes):
             self.data.append([])
-            for j in range(typeNumVals[i] + 1):
+            for j in range(graphProfiles[i].numVals + 1):
                 # each data type has an array for each value of that type + time
                 # time is index 0
                 self.data[i].append(collections.deque([], maxlen=plotLength))
-        self.isRun = True
+        self.isRun = multiprocessing.Value('i', True)
         self.isReceiving = False
-        self.thread = None
+        self.process = None # multiprocess variable
         self.prevData = None
         self.plotTimer = 0
         self.previousTimer = 0
         self.firstTime = 0
 
-        print('Trying to connect to: ' + str(serialPort) +
-              ' at ' + str(serialBaud) + ' BAUD.')
-        try:
-            self.serialConnection = serial.Serial(
-                serialPort, serialBaud, timeout=4)
-            print('Connected to ' + str(serialPort) +
-                  ' at ' + str(serialBaud) + ' BAUD.')
-        except:
-            sys.exit("Failed to connect with " + str(serialPort) +
-                     ' at ' + str(serialBaud) + ' BAUD.')
+        # print('Trying to connect to: ' + str(serialPort) +
+        #       ' at ' + str(serialBaud) + ' BAUD.')
+        # try:
+        #     self.serialConnection = serial.Serial(
+        #         serialPort, serialBaud, timeout=4)
+        #     print('Connected to ' + str(serialPort) +
+        #           ' at ' + str(serialBaud) + ' BAUD.')
+        # except:
+        #     sys.exit("Failed to connect with " + str(serialPort) +
+        #              ' at ' + str(serialBaud) + ' BAUD.')
+
+        self.serialConnection = 0
 
     def readSerialStart(self):
-        if self.thread == None:
-            self.thread = Thread(target=self.backgroundThread)
-            self.thread.start()
-            # Block till we start receiving values
-            while self.isReceiving != True:
-                time.sleep(0.1)
+        self.process = multiprocessing.Process(target=self.backgroundThread, args=(self.isRun,))
+        self.process.start()
 
     def getSerialData(self, frame, ax, lines, lineValueText, lineLabel, intervalText, timeRange):
         # make a copy of the current data in the buffer
@@ -85,7 +85,7 @@ class serialPlot:
         dataId = struct.unpack('h', currData[2:4])[0]
         if (dataId not in range(self.numDataTypes) or valid[0] != 0x00 or valid[1] != 0xff):
             # data is bad, reset buffer
-            self.serialConnection.reset_input_buffer()
+            # self.serialConnection.reset_input_buffer()
             self.prevData = None
             return
 
@@ -93,7 +93,7 @@ class serialPlot:
         # convert milliseconds to seconds
         newTime = struct.unpack('L', currData[12:])[0] / 1000
         self.data[dataId][0].append(newTime)
-        for j in range(self.typeNumVals[dataId]):
+        for j in range(self.graphProfiles[dataId].numVals):
             # put each data value in the corresponding array
             value = struct.unpack(
                 'h', currData[4+j*self.valNumBytes:4+(j+1)*self.valNumBytes])[0]
@@ -112,17 +112,17 @@ class serialPlot:
             ax[0].set_xbound(newTime - timeRange, newTime)
         self.prevData = currData
 
-    def backgroundThread(self):  # retrieve data continuously
+    def backgroundThread(self, isRun):  # retrieve data continuously
         time.sleep(1.0)  # give some buffer time for retrieving data
-        self.serialConnection.reset_input_buffer()
-        while (self.isRun):
-            self.serialConnection.readinto(self.rawData)
+        # self.serialConnection.reset_input_buffer()
+        while (isRun.value):
+            # self.serialConnection.readinto(self.rawData)
             self.isReceiving = True
 
     def close(self):
-        self.isRun = False
-        self.thread.join()
-        self.serialConnection.close()
+        self.isRun.value = False
+        self.process.join()
+        # self.serialConnection.close()
         print('Disconnected')
 
 
@@ -138,66 +138,109 @@ class Anim:
             self.anim.pause()
         self.paused = not self.paused
 
+class GraphProfile(NamedTuple):
+    numVals: int
+    plotLabel: str
+    legLabel: list
+    lineLabel: list
+    ybounds: list
 
 def main():
-    portName = sys.argv[1]  # input port used as command line argument
+    portName = sys.argv[0]  # input port used as command line argument, FIXME: CHANGE BACK TO INDEX 1
     baudRate = 38400
+
+    graphProfiles = []
+    graphProfiles.append(GraphProfile(
+        4, 
+        'Wheel Speed (CPS)', 
+        ['Front Right', 'Front Left', 'Rear Right', 'Rear Left'],
+        ['FR', 'FL', 'RR', 'RL'],
+        [0, 100]
+    ))
+    graphProfiles.append(GraphProfile(
+        4, 
+        'Cooling Loop Temp/Pres (C/PSI)', 
+        ['Inlet Temp', 'Outlet Temp', 'Inlet Pres', 'Outlet Pres'],
+        ['IT', 'OT', 'IP', 'OP'],
+        [0, 200]
+    ))
+    graphProfiles.append(GraphProfile(
+        1, 
+        'Strain Gauge (idk units)', 
+        ['Strain Gauge'],
+        ['SG'],
+        [2500, 3000]
+    ))
+
+    plotPerCol = 2
     maxPlotLength = 1000  # max length of the data arrays
     timeRange = 20  # in seconds
     packetNumBytes = 16
-    numDataTypes = 2
-    typeNumVals = [4, 4]  # number of data values for each data type
+    numDataTypes = len(graphProfiles)
+    # typeNumVals = [4, 4, 1]  # number of data values for each data type
     valNumBytes = 2  # short
     # multiplier to apply to each value to convert units
     typeValMultiplier = [1, 0.1]
+
     s = serialPlot(portName, baudRate, maxPlotLength, packetNumBytes,
-                   numDataTypes, typeNumVals, valNumBytes, typeValMultiplier)  # initialize variables
+                   numDataTypes, graphProfiles, valNumBytes, typeValMultiplier)  # initialize variables
     s.readSerialStart()  # starts background thread
     time.sleep(1.5)
 
     # plotting starts below
-    pltInterval = 10  # period at which the plot animation updates [ms]
+    pltInterval = 500  # period at which the plot animation updates [ms]
 
     # bounds
     xmin, xmax = (0, timeRange)
-    ybounds = [[0, 100], [24, 26]]  # value bounds for each data type
-
-    fig, ax = plt.subplots(numDataTypes, sharex=True)
+    ybounds = [[0, 100], [0, 200], [-100, 100]]  # value bounds for each data type
+    numCols = math.ceil(numDataTypes/2)
+    plotAxes = [0]*numCols
+    fig, (plotAxes[0], plotAxes[1]) = plt.subplots(2, numCols, sharex=True)
     fig.set_figheight(5.4)  # can change for larger figure
 
     # labels and colors
     plt.suptitle("Live Telemetry Data")
-    plotLabel = ['Wheel Speed (CPS)',
-                 'Cooling Loop Temperature/Pressure (C/PSI)']
-    legLabel = [['Front Right', 'Front Left', 'Rear Right', 'Rear Left'],
-                ['Inlet Temp', 'Outlet Temp', 'Inlet Pres', 'Outlet Pres']]
-    lineLabel = [['FR', 'FL', 'RR', 'RL'], ['IT', 'OT', 'IP', 'OP']]
     style = ['r-', 'g-', 'b-', 'y-']  # colors for the different lines
 
-    # time axis
-    ax[0].set_xbound(xmin, xmax)
-    ax[numDataTypes - 1].set_xlabel("Time (s)")
+    for axes in plotAxes:
+        for ax in axes:
+            ax.set_xbound(xmin, xmax)
+
+    for i in range(0, numCols):
+        plotAxes[len(plotAxes) - 1][i].set_xlabel("Time (s)")
 
     lines = []
     lineValueText = []
-    for i in range(numDataTypes):
-        # data axis
-        ax[i].set_ybound(ybounds[i])
-        ax[i].set_ylabel(plotLabel[i])
+    graphProfIdx = 0
+    for axesIdx in range(len(plotAxes)):
+        for i in range(plotPerCol):
+            # data axis
+            plotAxes[axesIdx][i].set_ybound(graphProfiles[graphProfIdx].ybounds)
+            plotAxes[axesIdx][i].set_ylabel(graphProfiles[graphProfIdx].plotLabel)
 
-        lines.append([])
-        lineValueText.append([])
-        for j in range(typeNumVals[i]):
-            # create line objects to be updated in loop
-            lines[i].append(ax[i].plot([], [], style[j],)[0])
-            lineValueText[i].append(ax[i].text(
-                0.80, 0.90-j*0.08, '', transform=ax[i].transAxes))  # text positioning
-        ax[i].legend(legLabel[i], loc="upper left")
-    intervalText = ax[0].text(0.35, 1.1, '', transform=ax[0].transAxes)
+            lines.append([])
+            lineValueText.append([])
+            for j in range(graphProfiles[graphProfIdx].numVals):
+                # create line objects to be updated in loop
+                lines[i].append(plotAxes[axesIdx][i].plot([], [], style[j],)[0])
+                lineValueText[i].append(plotAxes[axesIdx][i].text(
+                    0.80, 0.90-j*0.08, '', transform=plotAxes[axesIdx][i].transAxes))  # text positioning
+            plotAxes[axesIdx][i].legend(graphProfiles[graphProfIdx].legLabel, loc="upper left")
+
+            graphProfIdx += 1
+            if graphProfIdx == len(graphProfiles):
+                break
+
+    intervalText = plotAxes[0][0].text(0.35, 1.1, '', transform=plotAxes[0][0].transAxes)
 
     # initialize animation that will continuously update until closed
-    anim = Anim(animation.FuncAnimation(fig, s.getSerialData, fargs=(
-        ax, lines, lineValueText, lineLabel, intervalText, timeRange), interval=pltInterval, cache_frame_data=False))
+
+    # anim = Anim(animation.FuncAnimation(fig, s.getSerialData, fargs=(
+    #     ax, lines, lineValueText, lineLabel, intervalText, timeRange), interval=pltInterval, cache_frame_data=False))
+    
+    # use below for testing GUI without serial
+    anim = Anim(animation.FuncAnimation(fig, lambda a,b,c,d,e,f,g : 1, fargs=(
+        plotAxes[0], lines, lineValueText, list(), intervalText, timeRange), interval=pltInterval, cache_frame_data=False))
     fig.canvas.mpl_connect('key_press_event', anim.togglePause)
     plt.show()
     s.close()
