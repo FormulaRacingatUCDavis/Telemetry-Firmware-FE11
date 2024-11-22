@@ -2,9 +2,12 @@ import cv2 as cv
 import time
 import numpy as np
 from mjpeg_streamer import MjpegServer, Stream
+import math
 
-stream_gui = Stream("gui", quality = 50, fps = 30) # size = (1920, 1080) is optional
-stream_no_gui = Stream("no_gui", quality = 50, fps = 30)
+STREAM_QUALITY = 50
+STREAM_FPS = 60
+stream_gui = Stream("gui", quality = STREAM_QUALITY, fps = STREAM_FPS) # size = (1920, 1080) is optional
+stream_no_gui = Stream("no_gui", quality = STREAM_QUALITY, fps = STREAM_FPS)
 
 # server = MjpegServer("10.3.141.1", 8080)
 server = MjpegServer("localhost", 8080)
@@ -32,8 +35,10 @@ def AddImage(frame, image_src, x_pos, y_pos, scale):
     return frame
 
 def GetCameraFrame():
-    capture = cv.VideoCapture(0, cv.CAP_DSHOW)
+    capture = cv.VideoCapture(2, cv.CAP_ANY)
     # capture = cv.VideoCapture(0, cv.CAP_V4L2) # Solution: https://stackoverflow.com/questions/77190490/usb-camera-doesnt-work-with-opencv-and-raspberry-pi
+    capture.set(cv.CAP_PROP_FRAME_WIDTH, 1920)
+    capture.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
 
     while True:
         isTrue, frame = capture.read()
@@ -41,12 +46,17 @@ def GetCameraFrame():
         stream_no_gui.set_frame(frame)
 
         gui_frame = np.copy(frame)
+
+        # logo
         gui_frame = AddImage(gui_frame, "FRUCDHeader.png", 0, 0, 0.3)
+
+        # gauges
+
 
         cv.putText(gui_frame, str(time.time()), (255, 255), cv.FONT_HERSHEY_TRIPLEX, 1.0, (0, 0, 0), 2)
 
         if __name__ == "__main__":
-            #cv.imshow('Camera', frame)
+            #cv.imshow('Camera', gui_frame)
 
             if cv.waitKey(20) == ord(' '):
                 break
