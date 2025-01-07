@@ -63,11 +63,11 @@ def GetCameraFrame():
         gui_frame = AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, 1)
 
         #indicators
-        gui_frame = AddImage(gui_frame, "traction_control.png", 500, 500, 0.2)
-        gui_frame = AddImage(gui_frame, "speed_limiter.png", 100, 100, 0.2) # not working, use alpha channel
+        #gui_frame = AddImage(gui_frame, "traction_control.png", 500, 500, 0.2)
+        #gui_frame = AddImage(gui_frame, "speed_limiter.png", 100, 100, 0.2) # not working, use alpha channel
 
 
-        cv.putText(gui_frame, str(time.time()), (255, 255), cv.FONT_HERSHEY_TRIPLEX, 1.0, (0, 0, 0), 2)
+        #cv.putText(gui_frame, str(time.time()), (255, 255), cv.FONT_HERSHEY_TRIPLEX, 1.0, (0, 0, 0), 2)
 
         if __name__ == "__main__":
             #cv.imshow('Camera', gui_frame)
