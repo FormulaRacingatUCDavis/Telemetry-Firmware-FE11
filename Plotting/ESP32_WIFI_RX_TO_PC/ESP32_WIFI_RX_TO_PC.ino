@@ -3,7 +3,7 @@
 
 unsigned long timer;
 unsigned long currTime;
-long loopTime = 5000;  // in microseconds
+long loopTime = 2000;  // in microseconds
 
 // for testing
 void printPacket(const uint8_t* packet) {

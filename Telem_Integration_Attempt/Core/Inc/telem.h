@@ -10,7 +10,7 @@
 
 #define PACKET_LENGTH 16
 
-#define TELEM_DELAY 20
+#define TELEM_DELAY 2
 
 typedef struct __attribute__((__packed__)) Packet {
 	uint8_t validation[2];

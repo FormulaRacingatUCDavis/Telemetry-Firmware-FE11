@@ -21,8 +21,8 @@ esp_now_peer_info_t peerInfo;
 // 24:0A:C4:61:50:C8 transceiver
 // 24:6F:28:7A:93:44 test esp32 labeled '2'
 // 94:3C:C6:34:6E:68 test esp32 unlabeled
-// uint8_t broadcastAddress[] = {0x24, 0x6F, 0x28, 0x7A, 0x93, 0x44};
-uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0x61, 0x50, 0xC8};
+uint8_t broadcastAddress[] = {0x24, 0x6F, 0x28, 0x7A, 0x93, 0x44};
+// uint8_t broadcastAddress[] = {0x24, 0x0A, 0xC4, 0x61, 0x50, 0xC8};
 
 // buffer for receiving and sending packets
 uint8_t data[Packet::length];
@@ -87,7 +87,8 @@ void setup() {
 
 void loop() {
   
-  if (Serial2.available() >= Packet::length) { 
+  if (Serial2.available() >= Packet::length) {
+    Serial.println("available");
     Serial2.readBytes(data, 1);
     if (data[0] == 0x00) {
       Serial2.readBytes(data+1, 1);
@@ -96,7 +97,7 @@ void loop() {
         esp_err_t result = esp_now_send(broadcastAddress, data, Packet::length);
     
         Serial.println(result == ESP_OK ? "Sent with success" : "Error sending the data");
-        printPacket(data);
+        // printPacket(data);
       }
     }
   }

@@ -101,8 +101,8 @@ class serialPlot:
             self.data[dataId][j+1].append(value)
             lines[dataId][j].set_data(
                 self.data[dataId][0], self.data[dataId][j+1])
-            lineValueText[dataId][j].set_text(f"[{lineLabel[dataId][j]}] = {value:.1f}")
-
+            lineValueText[dataId][j].set_text(
+                f"[{lineLabel[dataId][j]}] = {value:.1f}")
 
         # update x bounds to most recent data
         if self.prevData == None:
