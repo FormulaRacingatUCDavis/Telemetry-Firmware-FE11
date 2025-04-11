@@ -1,5 +1,3 @@
-import numpy as np
-
 from nicegui import app, ui
 import collections
 import time
@@ -25,7 +23,7 @@ class serialPlot:
         self.data = []
         for i in range(numDataTypes):
             self.data.append([])
-            for j in range(typeNumVals[i] + 1):
+            for _ in range(typeNumVals[i] + 1):
                 # each data type has an array for each value of that type + time
                 # time is index 0
                 self.data[i].append(collections.deque([], maxlen=plotLength))
@@ -38,6 +36,7 @@ class serialPlot:
         self.firstTime = 0
         self.chart = None
         self.pause = False
+        self.intervalLabel = None
 
         print('Trying to connect to ' + str(serialPort) +
               ' at ' + str(serialBaud) + ' BAUD.')
@@ -62,8 +61,19 @@ class serialPlot:
         # Create the ECharts component
         self.chart = ui.echart({
             # Initial x-axis data
-            'xAxis': {'type': 'category', 'data': list(self.data[0][0])},
-            'yAxis': {'type': 'value'},
+            'xAxis': {
+                'type': 'category',
+                'data': list(self.data[0][0]),
+                'name': 'Time (s)',
+                'nameLocation': 'center',
+                'nameGap': '30'
+            },
+            'yAxis': {
+                'type': 'value',
+                'name': 'Fake Data',
+                'nameLocation': 'center',
+                'nameGap': '30'
+            },
             'series': [{
                 'type': 'line',
                 'data': list(self.data[0][1]),  # Initial y-axis data
@@ -96,7 +106,7 @@ class serialPlot:
             'grid': {
                 'left': '3%',
                 'right': '3%',
-                'bottom': '3%',
+                'bottom': '10%',
                 'containLabel': True
             },
         }).style('width: 100%; height: 400px;')  # Adjust chart size
@@ -113,12 +123,11 @@ class serialPlot:
             # data has not been updated, no need to update plot
             return
 
-        # # evaluate the time since previous update
-        # currentTimer = time.perf_counter()
-        # # the first timer reading will be erroneous
-        # self.plotTimer = int((currentTimer - self.previousTimer) * 1000)
-        # self.previousTimer = currentTimer
-        # intervalText.set_text('Plot Interval = ' + str(self.plotTimer) + 'ms')
+        # evaluate the time since previous update
+        currentTimer = time.perf_counter()
+        # the first timer reading will be erroneous
+        self.plotTimer = int((currentTimer - self.previousTimer) * 1000)
+        self.previousTimer = currentTimer
 
         # packet structure:
         # byte 0-1: validation (2 uint8_t)
@@ -139,7 +148,7 @@ class serialPlot:
         # read the rest of the packet
         # convert milliseconds to seconds
         newTime = struct.unpack('L', currData[12:])[0] / 1000000
-        self.data[dataId][0].append(newTime)
+        self.data[dataId][0].append(float(f"{newTime:.2f}"))
         for j in range(self.typeNumVals[dataId]):
             # put each data value in the corresponding array
             value = struct.unpack(
@@ -153,6 +162,7 @@ class serialPlot:
         self.chart.options['series'][3]['data'] = list(self.data[0][4])
         if (not self.pause):
             self.chart.update()
+            self.intervalLabel.set_text(f'Plot Interval: {self.plotTimer} ms')
 
     def backgroundThread(self):  # retrieve data continuously
         time.sleep(1.0)  # give some buffer time for retrieving data
@@ -236,7 +246,8 @@ def all_data():
     if s:
         if (s.chart == None):
             s.initCharts()
-        ui.timer(update_interval / 1000, s.getSerialData)  # Update every 10 ms
+            s.intervalLabel = ui.label('Plot Interval: -- ms')
+        ui.timer(update_interval / 1000, s.getSerialData)
     else:
         print("failed to initialize serialplot")
 
