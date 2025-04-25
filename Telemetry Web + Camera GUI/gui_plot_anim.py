@@ -1,7 +1,6 @@
 from nicegui import app, ui
 import collections
 import time
-# -----------------------------------------------------
 
 from threading import Thread
 import serial
@@ -9,21 +8,29 @@ import struct
 import copy
 import sys
 import serial.tools.list_ports
+from typing import NamedTuple
+
+
+class GraphProfile(NamedTuple):
+    numVals: int
+    plotLabel: str
+    legLabel: list
+    lineLabel: list
+    ybounds: list
 
 
 class serialPlot:
-    def __init__(self, serialPort, serialBaud, plotLength, packetNumBytes, numDataTypes, typeNumVals, valNumBytes):
+    def __init__(self, serialPort, serialBaud, plotLength, packetNumBytes, valNumBytes, graphProfiles):
         self.port = serialPort
         self.baud = serialBaud
         self.packetNumBytes = packetNumBytes
-        self.numDataTypes = numDataTypes
-        self.typeNumVals = typeNumVals
+        self.numGraphs = len(graphProfiles)
         self.valNumBytes = valNumBytes
         self.rawData = bytearray(packetNumBytes)
         self.data = []
-        for i in range(numDataTypes):
+        for i in range(self.numGraphs):
             self.data.append([])
-            for _ in range(typeNumVals[i] + 1):
+            for _ in range(graphProfiles[i].numVals + 1):
                 # each data type has an array for each value of that type + time
                 # time is index 0
                 self.data[i].append(collections.deque([], maxlen=plotLength))
@@ -33,10 +40,10 @@ class serialPlot:
         self.prevData = None
         self.plotTimer = 0
         self.previousTimer = 0
-        self.firstTime = 0
-        self.chart = None
+        self.charts = [None] * self.numGraphs
         self.pause = False
         self.intervalLabel = None
+        self.graphProfiles = graphProfiles
 
         print('Trying to connect to ' + str(serialPort) +
               ' at ' + str(serialBaud) + ' BAUD.')
@@ -58,60 +65,52 @@ class serialPlot:
                 time.sleep(0.1)
 
     def initCharts(self):
-        # Create the ECharts component
-        self.chart = ui.echart({
-            # Initial x-axis data
-            'xAxis': {
-                'type': 'category',
-                'data': list(self.data[0][0]),
-                'name': 'Time (s)',
-                'nameLocation': 'center',
-                'nameGap': '30'
-            },
-            'yAxis': {
-                'type': 'value',
-                'name': 'Fake Data',
-                'nameLocation': 'center',
-                'nameGap': '30'
-            },
-            'series': [{
-                'type': 'line',
-                'data': list(self.data[0][1]),  # Initial y-axis data
-                'smooth': False,
-                # 'lineStyle': {'color': FRUCD_DARK_BLUE},  # Set line color
-                'name': "FR",
-                'symbol': 'none',
-            }, {
-                'type': 'line',
-                'data': list(self.data[0][2]),  # Initial y-axis data
-                'smooth': False,
-                'name': "FL",
-                'symbol': 'none',
-            }, {
-                'type': 'line',
-                'data': list(self.data[0][3]),  # Initial y-axis data
-                'smooth': False,
-                'name': "RR",
-                'symbol': 'none',
-            }, {
-                'type': 'line',
-                'data': list(self.data[0][4]),  # Initial y-axis data
-                'smooth': False,
-                'name': "RL",
-                'symbol': 'none',
-            }],
-            'title': {'text': 'Live Telemetry Data'},
-            'tooltip': {'trigger': 'axis'},
-            'legend': {},
-            'grid': {
-                'left': '3%',
-                'right': '3%',
-                'bottom': '10%',
-                'containLabel': True
-            },
-        }).style('width: 100%; height: 400px;')  # Adjust chart size
+        if self.intervalLabel is None:
+            self.intervalLabel = ui.label(
+                'Plot Interval: -- ms')  # .classes('text-sm mb-2')
 
-        # self.chart.on('click', s.togglePause)
+        for i, profile in enumerate(self.graphProfiles):
+            opts = {
+                'xAxis': {
+                    'type':         'category',
+                    'data':         list(self.data[i][0]),
+                    'name':         'Time (s)',
+                    'nameLocation': 'center',
+                    'nameGap':      '30'
+                },
+                'yAxis': {
+                    'type':         'value',
+                    'name':         profile.plotLabel,
+                    'nameLocation': 'center',
+                    'nameGap':      '30',
+                    'min':          profile.ybounds[0],
+                    'max':          profile.ybounds[1]
+                },
+                'series':  [{
+                    'type':  'line',
+                    'data':  list(self.data[i][j+1]),
+                    'smooth': False,
+                    'name':  profile.legLabel[j],
+                    'symbol': 'none'
+                } for j in range(profile.numVals)],
+                'title':   {'text': profile.plotLabel},
+                'tooltip': {'trigger': 'axis'},
+                'legend':  {},
+                'grid':    {
+                    'left':         '3%',
+                    'right':        '3%',
+                    'bottom':       '10%',
+                    'containLabel': True
+                }
+            }
+
+            if self.charts[i] is None:
+                self.charts[i] = ui.echart(opts).style(
+                    'width: 100%; height: 400px;')
+            else:
+                # update existing component
+                self.charts[i].options = opts
+                self.charts[i].update()
 
     def togglePause(self):
         self.pause = not self.pause
@@ -139,7 +138,7 @@ class serialPlot:
         valid = currData[:2]
         # check data id
         dataId = struct.unpack('h', currData[2:4])[0]
-        if (dataId not in range(self.numDataTypes) or valid[0]):
+        if (dataId not in range(self.numGraphs) or valid[0]):
             # data is bad, reset buffer
             self.serialConnection.reset_input_buffer()
             self.prevData = None
@@ -149,19 +148,20 @@ class serialPlot:
         # convert milliseconds to seconds
         newTime = struct.unpack('L', currData[12:])[0] / 1000000
         self.data[dataId][0].append(float(f"{newTime:.2f}"))
-        for j in range(self.typeNumVals[dataId]):
+        for j in range(self.graphProfiles[dataId].numVals):
             # put each data value in the corresponding array
             value = struct.unpack(
                 'h', currData[4+j*self.valNumBytes:4+(j+1)*self.valNumBytes])[0]
             self.data[dataId][j+1].append(value)
 
-        self.chart.options['xAxis']['data'] = list(self.data[0][0])
-        self.chart.options['series'][0]['data'] = list(self.data[0][1])
-        self.chart.options['series'][1]['data'] = list(self.data[0][2])
-        self.chart.options['series'][2]['data'] = list(self.data[0][3])
-        self.chart.options['series'][3]['data'] = list(self.data[0][4])
-        if (not self.pause):
-            self.chart.update()
+        for i, chart in enumerate(self.charts):
+            chart.options['xAxis']['data'] = list(self.data[i][0])
+            for j in range(self.graphProfiles[i].numVals):
+                chart.options['series'][j]['data'] = list(self.data[i][j+1])
+
+        if not self.pause:
+            for chart in self.charts:
+                chart.update()
             self.intervalLabel.set_text(f'Plot Interval: {self.plotTimer} ms')
 
     def backgroundThread(self):  # retrieve data continuously
@@ -238,15 +238,12 @@ def all_data():
     # frucd_repeat_background()
     main_navigation_menu()
 
-    # Define constants
-    # max_length = 100  # Rolling window size
     update_interval = 18  # Update interval in milliseconds
 
     # Set up a periodic timer to call the update function
     if s:
-        if (s.chart == None):
+        if (s.charts[0] == None):
             s.initCharts()
-            s.intervalLabel = ui.label('Plot Interval: -- ms')
         ui.timer(update_interval / 1000, s.getSerialData)
     else:
         print("failed to initialize serialplot")
@@ -289,12 +286,23 @@ else:
     print("No port explicitly supplied, found port " + portName + ".")
 baudRate = 38400
 maxPlotLength = 200  # max length of the data arrays
-# timeRange = 20  # in seconds
 packetNumBytes = 16
-numDataTypes = 2
-typeNumVals = [4, 1]  # number of data values for each data type
 valNumBytes = 2  # short
+graphProfiles = []
+graphProfiles.append(GraphProfile(
+    4,
+    'Wheel Speed (CPS)',
+    ['Front Right', 'Front Left', 'Rear Right', 'Rear Left'],
+    ['FR', 'FL', 'RR', 'RL'],
+    [0, 100]
+))
+graphProfiles.append(GraphProfile(
+    1,
+    'Steering Angle (degrees)',
+    ['Wheel'],
+    ['W'],
+    [-200, 200]
+))
 s = serialPlot(portName, baudRate, maxPlotLength, packetNumBytes,
-               numDataTypes, typeNumVals, valNumBytes)  # initialize variables
+               valNumBytes, graphProfiles)  # initialize variables
 s.readSerialStart()  # starts background thread
-# time.sleep(1.5)
