@@ -1,0 +1,92 @@
+VERSION ""
+
+
+NS_ :
+    NS_DESC_
+    CM_
+    BA_DEF_
+    BA_
+    VAL_
+    CAT_DEF_
+    CAT_
+    FILTER
+    BA_DEF_DEF_
+    EV_DATA_
+    ENVVAR_DATA_
+    SGTYPE_
+    SGTYPE_VAL_
+    BA_DEF_SGTYPE_
+    BA_SGTYPE_
+    SIG_TYPE_REF_
+    VAL_TABLE_
+    SIG_GROUP_
+    SIG_VALTYPE_
+    SIGTYPE_VALTYPE_
+    BO_TX_BU_
+    BA_DEF_REL_
+    BA_REL_
+    BA_DEF_DEF_REL_
+    BU_SG_REL_
+    BU_EV_REL_
+    BU_BO_REL_
+    SG_MUL_VAL_
+
+BS_: 
+BU_: Dashboard PEI TelemNode 
+BO_ 2147485542 Dashboard_Vehicle_State: 8 Dashboard
+   SG_ HV_Requested : 15|8@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ Throttle1_Level : 23|8@0+ (1,0) [0|100] "%" Vector__XXX
+   SG_ Throttle2_Level : 31|8@0+ (1,0) [0|100] "%" Vector__XXX
+   SG_ Brake_Level : 39|8@0+ (1,0) [0|100] "%" Vector__XXX
+   SG_ Error : 47|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ VCU_ticks : 55|16@0+ (1,0) [0|65535] "ms" Vector__XXX
+   SG_ State : 43|4@0+ (1,0) [0|1] "" Vector__XXX
+
+BO_ 2147484544 PEI_BMS_Status: 8 PEI
+   SG_ HI_Temp : 7|8@0+ (1,0) [0|255] "C" Vector__XXX
+   SG_ SOC : 15|8@0+ (1,0) [0|100] "%" Vector__XXX
+   SG_ BMS_Status : 23|16@0+ (1,0) [0|65535] "" Vector__XXX
+   SG_ Pack_Voltage : 39|16@0+ (0.01,0) [0|65535] "V" Vector__XXX
+   SG_ SPI_Error_Flags : 55|16@0+ (1,0) [0|65535] "" Vector__XXX
+
+BO_ 2147484551 PEI_Current_Shutdown: 8 PEI
+   SG_ Current : 7|16@0+ (0.1,0) [0|65535] "A" Vector__XXX
+   SG_ IMD_OK : 21|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ BMS_OK : 20|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ SHUTDOWN_FINAL : 19|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ AIR_NEG : 18|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ AIR_POS : 17|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ PRECHARGE : 16|1@0+ (1,0) [0|1] "" Vector__XXX
+   SG_ Max_Faulting_LTC_Address : 31|8@0+ (1,0) [0|9] "" Vector__XXX
+
+BO_ 2147484672 TelemNode_Cooling_Loop_Temps: 8 TelemNode
+   SG_ Inlet_Water_Temp : 7|16@0- (0.1,0) [0|65535] "C" Vector__XXX
+   SG_ Outlet_Water_Temp : 23|16@0- (0.1,0) [0|65535] "C" Vector__XXX
+   SG_ Air_Into_Radiator_Temp : 39|16@0- (0.1,0) [0|65535] "C" Vector__XXX
+   SG_ Air_Out_Of_Radiator_Temp : 55|16@0- (0.1,0) [0|65535] "" Vector__XXX
+
+BO_ 2147484674 TelemNode_Cool_Loop_Pressures: 4 TelemNode
+   SG_ Inlet_Water_Pressure : 7|16@0+ (0.01,0) [0|1] "PSI" Vector__XXX
+   SG_ Outlet_Water_Pressure : 23|16@0+ (0.01,0) [0|1] "PSI" Vector__XXX
+
+BO_ 2147484673 TelemNode_Wheel_Speed_Rear: 4 TelemNode
+   SG_ Wheel_Speed_Rear_Right : 7|16@0+ (1,0) [0|65535] "CPS/RPM" Vector__XXX
+   SG_ Wheel_Speed_Rear_Left : 23|16@0+ (1,0) [0|65535] "CPS/RPM" Vector__XXX
+
+BA_DEF_ BO_ "GenMsgBackgroundColor" STRING ;
+BA_DEF_ BO_ "GenMsgForegroundColor" STRING ;
+BA_DEF_ BO_ "matchingcriteria" INT 0 0;
+BA_DEF_ BO_ "filterlabeling" INT 0 0;
+BA_DEF_ BO_ "matchingcriteria" INT 0 0;
+BA_DEF_ BO_ "filterlabeling" INT 0 0;
+BA_DEF_DEF_ "GenMsgBackgroundColor" "#ffffff";
+BA_DEF_DEF_ "GenMsgForegroundColor" "#000000";
+BA_DEF_DEF_ "matchingcriteria" 0;
+BA_DEF_DEF_ "filterlabeling" 1;
+BA_DEF_DEF_ "matchingcriteria" 0;
+BA_DEF_DEF_ "filterlabeling" 1;
+BA_ "GenMsgForegroundColor" BO_ 2147485542 "#000000";
+BA_ "GenMsgForegroundColor" BO_ 2147484544 "#000000";
+BA_ "GenMsgForegroundColor" BO_ 2147484551 "#000000";
+BA_ "GenMsgForegroundColor" BO_ 2147484672 "#000000";
+BA_ "GenMsgForegroundColor" BO_ 2147484674 "#000000";

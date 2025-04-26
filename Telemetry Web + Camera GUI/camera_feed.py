@@ -11,10 +11,16 @@ class CameraFeed:
         self.STREAM_FPS = stream_fps
         self.STREAM_IP = stream_ip
         self.STREAM_PORT = stream_port
-        self.is_recording = False
+        self.record_stream = mp.Value('i', False)
 
-        STREAM_PROCESS = mp.Process(target=self.CameraMain)
-        STREAM_PROCESS.start()
+        self.stream_process = mp.Process(target=self.CameraMain, args=(self.record_stream,))
+        self.stream_process.start()
+
+    def ToggleRecording(self):
+        if self.record_stream.value:
+            self.record_stream.value = False
+        else:
+            self.record_stream.value = True
 
     def CurrentDateTime(self):
         return time.strftime("%b_%d_%Y_%Hh_%Mm_%Ss", time.localtime())
@@ -45,7 +51,15 @@ class CameraFeed:
 
         return frame
 
-    def CameraMain(self):
+    def AddThrottleBrakes(self, frame, x_pos, y_pos):
+        throttle_norm = (frame[0,0,0] / 255) * (y_pos - (y_pos - 100))
+        brake_norm = (frame[0,0,0] / 255) * (y_pos - (y_pos - 100))
+        cv.rectangle(frame, (x_pos,y_pos), (x_pos+20,y_pos-int(throttle_norm)), (0,255,0), -1)
+        cv.rectangle(frame, (x_pos+30, y_pos), (x_pos+50,y_pos-int(brake_norm)), (0,0,255), -1)
+
+        return frame
+
+    def CameraMain(self, record_stream):
         # camera stream
         stream_gui = Stream("gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)  # size = (1920, 1080) is optional
         stream_no_gui = Stream("no_gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)
@@ -66,22 +80,25 @@ class CameraFeed:
         # stream recording
         fourcc = cv.VideoWriter.fourcc('m', 'p', '4', 'v')
         out = None
+        is_recording = False
 
         def StartRecording():
             nonlocal out
-            if not self.is_recording:
+            nonlocal is_recording
+            if not is_recording:
                 out = cv.VideoWriter(f"{self.CurrentDateTime()}_WebCam_Video.mp4", fourcc, 20, (int(capture.get(3)), int(capture.get(4))))
-                self.is_recording = True
+                is_recording = True
 
         def EndRecording():
-            if self.is_recording:
-                self.is_recording = False
+            nonlocal is_recording
+            if is_recording:
+                is_recording = False
                 out.release()
 
         def EndStream():
             server.stop()
             capture.release()
-            if self.is_recording:
+            if is_recording:
                 out.release()
 
             if __name__ == "__main__":
@@ -101,6 +118,11 @@ class CameraFeed:
 
             # gauges
             gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, 1)
+            gui_frame = self.AddThrottleBrakes(gui_frame, 580, 470)
+
+            # vehicle status
+            cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
+            cv.putText(gui_frame, "BMS Status: Normal/No Error", (225,40), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
 
             #indicators
             #gui_frame = AddImage(gui_frame, "traction_control.png", 500, 500, 0.2)
@@ -111,8 +133,13 @@ class CameraFeed:
 
             stream_gui.set_frame(gui_frame)
 
-            if self.is_recording:
+            if record_stream.value:
+                StartRecording()
                 out.write(gui_frame)
+
+                cv.circle(gui_frame, (620, 20), 10, (0, 0, 255), -1)
+            else:
+                EndRecording()
 
             if __name__ == "__main__":
                 # cv.imshow('Camera', frame)

@@ -6,6 +6,7 @@ import itertools
 from nicegui import app, ui
 import plotly.graph_objects as go
 from camera_feed import CameraFeed
+from telemetry_dbc_decoder import DBCDecoder
 
 # FRUCD Brand 2.0 Colors
 FRUCD_DARK_BLUE = '#003a70'
@@ -14,10 +15,15 @@ CAMERA_STREAM_IP = 'localhost'
 
 app.add_static_files('/static', 'static')
 
+# DBC CAN Decoder initialization
+dbc_can_decoder = None
+if __name__ == "__main__":
+    dbc_can_decoder = DBCDecoder()
+
 # camera steam initialization
 camera_stream = None
 if __name__ == "__main__":
-    camera_stream = CameraFeed()
+    camera_stream = CameraFeed(stream_ip = CAMERA_STREAM_IP)
 
 def frucd_repeat_background():
     ui.add_head_html("<style>body {background-image: url('/static/FRUCD_logo.png'); background-size: 5%;}</style>")
@@ -33,7 +39,7 @@ def main_navigation_menu():
                 with ui.menu().props("anchor='top end' self='top start' auto-close"):
                     ui.menu_item('All Data', on_click=lambda: ui.navigate.to('/all_data', new_tab=False))
                     ui.menu_item('Electrical')
-                    ui.menu_item('Cooling')
+                    ui.menu_item('Cooling') # TODO: ORDER DATA BY CAN SHEET, NOT SUB-TEAM
                     ui.menu_item('Custom')
             with ui.menu_item('Camera Feeds', auto_close=False):
                 with ui.item_section().props('side'):
@@ -49,6 +55,9 @@ def camera_feed_gui():
     main_navigation_menu()
 
     ui.interactive_image(f'http://{CAMERA_STREAM_IP}:8080/gui').style('margin:auto; height:60%; width:60%')
+
+    with ui.row().classes('w-full justify-center'):
+        ui.button("Toggle Recording", on_click=lambda: camera_stream.ToggleRecording() if __name__ == "__main__" else None).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
 
 @ui.page('/camera_feed_no_gui')
 def camera_feed_no_gui():
@@ -68,7 +77,7 @@ def all_data():
     data = []
     fig = go.Figure()
     fig.add_scatter()
-    fig.update_layout(margin=dict(l=20, r=20, t=20, b=20))
+    fig.update_layout(margin=dict(l=20, r=20, t=20, b=20),width = 100, height = 100)
     plot = ui.plotly(fig)
 
     async def plotlyupdatetest():
@@ -161,4 +170,4 @@ def main_page():
                 ui.item('No GUI', on_click=lambda: ui.navigate.to('/camera_feed_no_gui', new_tab=False))
             ui.button('Data Explorer', on_click=lambda: ui.navigate.to('/data_explorer', new_tab=False)).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
 
-ui.run(port=8000, show=False)
+ui.run(port=8000, show=False, reload=False)
