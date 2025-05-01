@@ -11,7 +11,7 @@ class DBCDecoder:
         self.can_process.start()
 
     def ReadCan(self, can_queue):
-        dbc_db = cantools.database.load_file('FRUCD_DBC.dbc')
+        dbc_db = cantools.database.load_file('FE12_DBC.dbc')
         print(dbc_db)
         can_bus = can.interface.Bus( )  # TODO: Figure out params
 
