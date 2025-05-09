@@ -34,6 +34,7 @@ def distribute_can():
                 match can_data["CAN_MSG_Name"]:
                     case "Dashboard_Vehicle_State":
                         dashboard_graphs.UpdateGraphs(can_data)
+                        camera_stream.data_queue.put(can_data)
                     case "PEI_BMS_Status":
                         pei_graphs.UpdateGraphs(can_data)
                     case "PEI_Status":
@@ -46,6 +47,7 @@ def distribute_can():
                         t_node_graphs.UpdateGraphs(can_data)
                     case "Dashboard_Torque_Request":
                         dashboard_graphs.UpdateGraphs(can_data)
+                        camera_stream.data_queue.put(can_data)
                     case "Dashboard_Random_Shit":
                         dashboard_graphs.UpdateGraphs(can_data)
                     case "PEI_Diagnostic_BMS_Data":
