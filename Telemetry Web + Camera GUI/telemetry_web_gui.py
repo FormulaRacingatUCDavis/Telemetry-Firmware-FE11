@@ -200,7 +200,7 @@ async def data_explorer():
                 ui.item('Camera Stream Recordings', on_click=lambda: set_curr_directory('stream_recordings'))
 
             ui.button("Download Selected Files", on_click=download_selected_files).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
-            ui.button("Preview Selected File", on_click=preview_selected_file).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
+            # ui.button("Preview Selected File", on_click=preview_selected_file).classes(f'!bg-[{FRUCD_DARK_BLUE}]') # TODO: FIX
 
 
 # TODO: ADD MAP, PLOTLY, LEFT/RIGHT SHELF, LOG VIEW
