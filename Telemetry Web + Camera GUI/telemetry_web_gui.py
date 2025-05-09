@@ -196,8 +196,8 @@ async def data_explorer():
             with ui.dropdown_button('Directories', auto_close=True) as ddb:
                 ddb.classes(f'!bg-[{FRUCD_DARK_BLUE}]')
                 ui.item('Static', on_click=lambda: set_curr_directory('static'))
-                ui.item('CAN Data', on_click=lambda: set_curr_directory('csv_test_files'))
-                ui.item('Camera Stream Recordings')
+                ui.item('CAN Data', on_click=lambda: set_curr_directory('/home/frucd/projects/Raspi-TelemHost-Firmware-FE12/logs'))
+                ui.item('Camera Stream Recordings', on_click=lambda: set_curr_directory('stream_recordings'))
 
             ui.button("Download Selected Files", on_click=download_selected_files).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
             ui.button("Preview Selected File", on_click=preview_selected_file).classes(f'!bg-[{FRUCD_DARK_BLUE}]')

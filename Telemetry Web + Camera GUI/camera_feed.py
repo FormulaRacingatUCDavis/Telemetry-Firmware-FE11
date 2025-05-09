@@ -87,7 +87,7 @@ class CameraFeed:
             nonlocal out
             nonlocal is_recording
             if not is_recording:
-                out = cv.VideoWriter(f"{self.CurrentDateTime()}_WebCam_Video.mp4", fourcc, 20, (int(capture.get(3)), int(capture.get(4))))
+                out = cv.VideoWriter(f"stream_recordings/{self.CurrentDateTime()}_WebCam_Video.mp4", fourcc, 20, (int(capture.get(3)), int(capture.get(4))))
                 is_recording = True
 
         def EndRecording():
