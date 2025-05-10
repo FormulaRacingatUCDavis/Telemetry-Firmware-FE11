@@ -222,5 +222,5 @@ def home_page():
                 ui.item('No GUI', on_click=lambda: ui.navigate.to('/camera_feed_no_gui', new_tab=False))
             ui.button('Data Explorer', on_click=lambda: ui.navigate.to('/data_explorer', new_tab=False)).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
 
-ui.timer(0.1, lambda: asyncio.create_task(distribute_can()), once=True)
+ui.timer(0.1, distribute_can, once=True)
 ui.run(port=8000, show=False, reload=False)
