@@ -1,6 +1,7 @@
 import os
 import time
 import csv
+import socket
 import asyncio
 import itertools
 from nicegui import app, ui
@@ -12,7 +13,8 @@ from telemetry_web_gui_graph_manager import DashboardGraphs, PEIGraphs, TNodeGra
 # FRUCD Brand 2.0 Colors
 FRUCD_DARK_BLUE = '#003a70'
 
-CAMERA_STREAM_IP = 'localhost'
+hostname = socket.gethostname()
+CAMERA_STREAM_IP = socket.gethostbyname_ex(hostname)[2][0]
 
 app.add_static_files('/static', 'static')
 
