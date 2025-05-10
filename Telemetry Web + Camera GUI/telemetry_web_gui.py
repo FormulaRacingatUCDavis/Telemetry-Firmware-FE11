@@ -13,8 +13,7 @@ from telemetry_web_gui_graph_manager import DashboardGraphs, PEIGraphs, TNodeGra
 # FRUCD Brand 2.0 Colors
 FRUCD_DARK_BLUE = '#003a70'
 
-hostname = socket.gethostname()
-CAMERA_STREAM_IP = socket.gethostbyname_ex(hostname)[2][0]
+CAMERA_STREAM_IP = "10.3.141.1"
 
 app.add_static_files('/static', 'static')
 
