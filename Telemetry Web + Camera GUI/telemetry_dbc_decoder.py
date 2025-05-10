@@ -11,7 +11,7 @@ class DBCDecoder:
 
     def ReadCan(self, can_queue):
         dbc_db = cantools.database.load_file('FE12_DBC.dbc')
-        can_bus = can.interface.Bus(channel = 'can0')  # TODO: Figure out params
+        can_bus = can.interface.Bus(channel='can0', interface='socketcan')
 
         while True:
             can_msg = can_bus.recv()
