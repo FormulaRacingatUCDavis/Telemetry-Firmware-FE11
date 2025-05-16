@@ -45,10 +45,12 @@ class CameraFeed:
 
         return frame
 
-    def AddSpeedometer(self, frame, x_pos, y_pos, data, scale=1):
-        normalized_value = ((data - 0) / (100 - 0)) * (360 - 180) + 180 # for speedometer testing
+    def AddSpeedometer(self, frame, x_pos, y_pos, rpm, scale=1):
+        speed = rpm * 50.2655 * 60 / 63360 # rpm to mph
+
+        normalized_value = ((speed - 0) / (100 - 0)) * (360 - 180) + 180 # for speedometer testing
         cv.ellipse(frame, (x_pos,y_pos), (100,100), 0, 180, normalized_value, (0,183,255), 10)
-        cv.putText(frame, str(data), (x_pos - 25, y_pos-25), cv.FONT_HERSHEY_DUPLEX, scale, (0,183,233), 2)
+        cv.putText(frame, str(speed), (x_pos - 25, y_pos-25), cv.FONT_HERSHEY_DUPLEX, scale, (0,183,233), 2)
 
         return frame
 
