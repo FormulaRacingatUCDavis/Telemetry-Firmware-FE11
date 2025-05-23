@@ -1,6 +1,0 @@
-../Core/Src/can_manager.c:34:6:HAL_CAN_RxFifo0MsgPendingCallback	1
-../Core/Src/can_manager.c:43:6:save_can_rx_data	20
-../Core/Src/can_manager.c:131:6:can_tx_vcu_state	2
-../Core/Src/can_manager.c:156:6:can_tx_torque_request	6
-../Core/Src/can_manager.c:206:6:can_tx_disable_MC	2
-../Core/Src/can_manager.c:221:6:can_clear_MC_fault	2

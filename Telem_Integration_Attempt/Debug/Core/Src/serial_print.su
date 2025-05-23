@@ -1,2 +1,0 @@
-../Core/Src/serial_print.c:3:6:print	16	static
-../Core/Src/serial_print.c:6:6:dump_can_data	8	static

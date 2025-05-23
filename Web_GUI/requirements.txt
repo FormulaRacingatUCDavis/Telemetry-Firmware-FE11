@@ -1,0 +1,8 @@
+opencv-python==4.11.0.86
+numpy==2.2.1
+mjpeg-streamer==2023.3.19
+python-can==4.5.0
+cantools==40.2.1
+nicegui==2.9.0
+plotly==6.0.0
+pyserial
