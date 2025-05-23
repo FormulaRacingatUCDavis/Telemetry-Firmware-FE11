@@ -1,17 +1,19 @@
 import os
 import time
 import csv
+import socket
 import asyncio
 import itertools
 from nicegui import app, ui
 import plotly.graph_objects as go
 from camera_feed import CameraFeed
 from telemetry_dbc_decoder import DBCDecoder
+from telemetry_web_gui_graph_manager import DashboardGraphs, PEIGraphs, TNodeGraphs
 
 # FRUCD Brand 2.0 Colors
 FRUCD_DARK_BLUE = '#003a70'
 
-CAMERA_STREAM_IP = 'localhost'
+CAMERA_STREAM_IP = "10.3.141.1"
 
 app.add_static_files('/static', 'static')
 
@@ -19,6 +21,43 @@ app.add_static_files('/static', 'static')
 dbc_can_decoder = None
 if __name__ == "__main__":
     dbc_can_decoder = DBCDecoder()
+
+# Graphs initialization
+dashboard_graphs = DashboardGraphs()
+pei_graphs = PEIGraphs()
+t_node_graphs = TNodeGraphs()
+
+def distribute_can():
+    async def distribute_data():
+        while True:
+            if not dbc_can_decoder.can_queue.empty():
+                can_data = dbc_can_decoder.can_queue.get()
+                match can_data["CAN_MSG_Name"]:
+                    case "Dashboard_Vehicle_State":
+                        dashboard_graphs.UpdateGraphs(can_data)
+                        camera_stream.data_queue.put(can_data)
+                    case "PEI_BMS_Status":
+                        pei_graphs.UpdateGraphs(can_data)
+                    case "PEI_Status":
+                        pei_graphs.UpdateGraphs(can_data)
+                    case "TelemNode_Cooling_Loop_Temps":
+                        t_node_graphs.UpdateGraphs(can_data)
+                    case "TelemNode_Cool_Loop_Pressures":
+                        t_node_graphs.UpdateGraphs(can_data)
+                    case "TelemNode_Wheel_Speed_Rear":
+                        t_node_graphs.UpdateGraphs(can_data)
+                    case "Dashboard_Torque_Request":
+                        dashboard_graphs.UpdateGraphs(can_data)
+                        camera_stream.data_queue.put(can_data)
+                    case "Dashboard_Random_Shit":
+                        dashboard_graphs.UpdateGraphs(can_data)
+                    case "PEI_Diagnostic_BMS_Data":
+                        pei_graphs.UpdateGraphs(can_data)
+                    case "TelemNode_Strain_Gauges_Rear":
+                        t_node_graphs.UpdateGraphs(can_data)
+            await asyncio.sleep(0.1)
+
+    asyncio.create_task(distribute_data())
 
 # camera steam initialization
 camera_stream = None
@@ -33,13 +72,13 @@ def main_navigation_menu():
         button.classes(f'!bg-[{FRUCD_DARK_BLUE}]')
         with ui.menu():
             ui.menu_item('Home', on_click=lambda: ui.navigate.to('/', new_tab=False))
-            with ui.menu_item('Live Data', auto_close=False):
+            with ui.menu_item('Live PCAN Data', auto_close=False):
                 with ui.item_section().props('side'):
                     ui.icon('keyboard_arrow_right')
                 with ui.menu().props("anchor='top end' self='top start' auto-close"):
-                    ui.menu_item('All Data', on_click=lambda: ui.navigate.to('/all_data', new_tab=False))
-                    ui.menu_item('Electrical')
-                    ui.menu_item('Cooling') # TODO: ORDER DATA BY CAN SHEET, NOT SUB-TEAM
+                    ui.menu_item('Dashboard Data', on_click=lambda: ui.navigate.to('/dashboard_data', new_tab=False))
+                    ui.menu_item('PEI Data', on_click=lambda: ui.navigate.to('/pei_data', new_tab=False))
+                    ui.menu_item('T-Node Data', on_click=lambda: ui.navigate.to('/t_node_data', new_tab=False)) # TODO: ORDER DATA BY CAN SHEET, NOT SUB-TEAM
                     ui.menu_item('Custom')
             with ui.menu_item('Camera Feeds', auto_close=False):
                 with ui.item_section().props('side'):
@@ -66,28 +105,42 @@ def camera_feed_no_gui():
 
     ui.interactive_image(f'http://{CAMERA_STREAM_IP}:8080/no_gui').style('margin:auto; height:60%; width:60%')
 
-@ui.page('/all_data')
-def all_data():
+@ui.page('/dashboard_data')
+def dashboard_data():
     frucd_repeat_background()
     main_navigation_menu()
 
-    #ui.slider(min=1, max=5, value=3)
-    #cols = 5
-    #with ui.grid(columns=cols):
-    data = []
-    fig = go.Figure()
-    fig.add_scatter()
-    fig.update_layout(margin=dict(l=20, r=20, t=20, b=20),width = 100, height = 100)
-    plot = ui.plotly(fig)
+    with ui.row().classes('flex justify-center items-start w-screen'):
+        with ui.card(align_items='center'):
+            ui.button()
 
-    async def plotlyupdatetest():
-        while True:
-            data.append(time.time())
-            fig.data[0].y = data[:]
-            plot.update()
-            await asyncio.sleep(0.1)
+    with ui.grid(columns=1).classes('w-full'):
+        dashboard_graphs.GraphsInit()
 
-    asyncio.create_task(plotlyupdatetest())
+
+@ui.page('/pei_data')
+def pei_data():
+    frucd_repeat_background()
+    main_navigation_menu()
+
+    with ui.row().classes('flex justify-center items-start w-screen'):
+        with ui.card(align_items='center'):
+            ui.button()
+
+    with ui.grid(columns=1).classes('w-full'):
+        pei_graphs.GraphsInit()
+
+@ui.page('/t_node_data')
+def t_node_data():
+    frucd_repeat_background()
+    main_navigation_menu()
+
+    with ui.row().classes('flex justify-center items-start w-screen'):
+        with ui.card(align_items='center'):
+            ui.button()
+
+    with ui.grid(columns=1).classes('w-full'):
+        t_node_graphs.GraphsInit()
 
 @ui.page('/data_explorer')
 async def data_explorer():
@@ -144,30 +197,31 @@ async def data_explorer():
             with ui.dropdown_button('Directories', auto_close=True) as ddb:
                 ddb.classes(f'!bg-[{FRUCD_DARK_BLUE}]')
                 ui.item('Static', on_click=lambda: set_curr_directory('static'))
-                ui.item('CAN Data', on_click=lambda: set_curr_directory('csv_test_files'))
-                ui.item('Camera Stream Recordings')
+                ui.item('CAN Data', on_click=lambda: set_curr_directory('/home/frucd/projects/Raspi-TelemHost-Firmware-FE12/logs'))
+                ui.item('Camera Stream Recordings', on_click=lambda: set_curr_directory('stream_recordings'))
 
             ui.button("Download Selected Files", on_click=download_selected_files).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
-            ui.button("Preview Selected File", on_click=preview_selected_file).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
+            # ui.button("Preview Selected File", on_click=preview_selected_file).classes(f'!bg-[{FRUCD_DARK_BLUE}]') # TODO: FIX
 
 
 # TODO: ADD MAP, PLOTLY, LEFT/RIGHT SHELF, LOG VIEW
 
 @ui.page('/')
-def main_page():
+def home_page():
     frucd_repeat_background()
 
     with ui.card(align_items='center').classes('fixed-center'):
         ui.image('/static/FRUCD_GD_White(1).png')
         with ui.row():
-            with ui.dropdown_button('Live Data', auto_close=True).classes(f'!bg-[{FRUCD_DARK_BLUE}]'):
-                ui.item('All Data', on_click=lambda: ui.navigate.to('/all_data', new_tab=False))
-                ui.item('Electrical')
-                ui.item('Cooling')
+            with ui.dropdown_button('Live PCAN Data', auto_close=True).classes(f'!bg-[{FRUCD_DARK_BLUE}]'):
+                ui.item('Dashboard Data', on_click=lambda: ui.navigate.to('/dashboard_data', new_tab=False))
+                ui.item('PEI Data', on_click=lambda: ui.navigate.to('/pei_data', new_tab=False))
+                ui.item('T-Node Data', on_click=lambda: ui.navigate.to('/t_node_data', new_tab=False))
                 ui.item('Custom')
             with ui.dropdown_button('Camera Feeds', auto_close=True).classes(f'!bg-[{FRUCD_DARK_BLUE}]'):
                 ui.item('GUI', on_click=lambda: ui.navigate.to('/camera_feed_gui', new_tab=False))
                 ui.item('No GUI', on_click=lambda: ui.navigate.to('/camera_feed_no_gui', new_tab=False))
             ui.button('Data Explorer', on_click=lambda: ui.navigate.to('/data_explorer', new_tab=False)).classes(f'!bg-[{FRUCD_DARK_BLUE}]')
 
+ui.timer(0.1, distribute_can, once=True)
 ui.run(port=8000, show=False, reload=False)

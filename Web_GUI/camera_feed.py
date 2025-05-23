@@ -12,8 +12,9 @@ class CameraFeed:
         self.STREAM_IP = stream_ip
         self.STREAM_PORT = stream_port
         self.record_stream = mp.Value('i', False)
+        self.data_queue = mp.Queue()
 
-        self.stream_process = mp.Process(target=self.CameraMain, args=(self.record_stream,))
+        self.stream_process = mp.Process(target=self.CameraMain, args=(self.record_stream, self.data_queue))
         self.stream_process.start()
 
     def ToggleRecording(self):
@@ -44,22 +45,24 @@ class CameraFeed:
 
         return frame
 
-    def AddSpeedometer(self, frame, x_pos, y_pos, scale=1):
-        normalized_value = ((frame[0,0,0] - 0) / (255 - 0)) * (360 - 180) + 180 # for speedometer testing
+    def AddSpeedometer(self, frame, x_pos, y_pos, rpm, scale=1):
+        speed = rpm * 50.2655 * 60 / 63360 # rpm to mph
+
+        normalized_value = ((speed - 0) / (100 - 0)) * (360 - 180) + 180 # for speedometer testing
         cv.ellipse(frame, (x_pos,y_pos), (100,100), 0, 180, normalized_value, (0,183,255), 10)
-        cv.putText(frame, str(frame[0,0,0]), (x_pos - 25, y_pos-25), cv.FONT_HERSHEY_DUPLEX, scale, (0,183,233), 2)
+        cv.putText(frame, str(speed), (x_pos - 25, y_pos-25), cv.FONT_HERSHEY_DUPLEX, scale, (0,183,233), 2)
 
         return frame
 
-    def AddThrottleBrakes(self, frame, x_pos, y_pos):
-        throttle_norm = (frame[0,0,0] / 255) * (y_pos - (y_pos - 100))
-        brake_norm = (frame[0,0,0] / 255) * (y_pos - (y_pos - 100))
+    def AddThrottleBrakes(self, frame, x_pos, y_pos, throttle_percent, brake_percent):
+        throttle_norm = throttle_percent * (y_pos - (y_pos - 100))
+        brake_norm = brake_percent * (y_pos - (y_pos - 100))
         cv.rectangle(frame, (x_pos,y_pos), (x_pos+20,y_pos-int(throttle_norm)), (0,255,0), -1)
         cv.rectangle(frame, (x_pos+30, y_pos), (x_pos+50,y_pos-int(brake_norm)), (0,0,255), -1)
 
         return frame
 
-    def CameraMain(self, record_stream):
+    def CameraMain(self, record_stream, data_queue):
         # camera stream
         stream_gui = Stream("gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)  # size = (1920, 1080) is optional
         stream_no_gui = Stream("no_gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)
@@ -86,7 +89,7 @@ class CameraFeed:
             nonlocal out
             nonlocal is_recording
             if not is_recording:
-                out = cv.VideoWriter(f"{self.CurrentDateTime()}_WebCam_Video.mp4", fourcc, 20, (int(capture.get(3)), int(capture.get(4))))
+                out = cv.VideoWriter(f"stream_recordings/{self.CurrentDateTime()}_WebCam_Video.mp4", fourcc, 20, (int(capture.get(3)), int(capture.get(4))))
                 is_recording = True
 
         def EndRecording():
@@ -104,6 +107,9 @@ class CameraFeed:
             if __name__ == "__main__":
                 cv.destroyAllWindows()
 
+        vehicle_speed = 0
+        throttle_percent = 0
+        brake_percent = 0
         while True:
             is_true, frame = capture.read()
 
@@ -113,16 +119,26 @@ class CameraFeed:
             gui_frame_x_dim = gui_frame.shape[0]
             gui_frame_y_dim = gui_frame.shape[1]
 
+            # data updates
+            if not data_queue.empty():
+                can_data = data_queue.get()
+                if can_data.get("Speed") != None:
+                    vehicle_speed = can_data["Speed"]
+                if can_data.get("Throttle1_Level") != None:
+                    throttle_percent = can_data["Throttle1_Level"]
+                if can_data.get("Brake_Level") != None:
+                    brake_percent = can_data["Brake_Level"]
+
             # logo
             gui_frame = self.AddImage(gui_frame, "static/FRUCDHeader.png", 0, 0, 0.3)
 
             # gauges
-            gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, 1)
-            gui_frame = self.AddThrottleBrakes(gui_frame, 580, 470)
+            gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, vehicle_speed, 1)
+            gui_frame = self.AddThrottleBrakes(gui_frame, 580, 470, throttle_percent, brake_percent)
 
             # vehicle status
-            cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
-            cv.putText(gui_frame, "BMS Status: Normal/No Error", (225,40), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
+            # cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
+            # cv.putText(gui_frame, "BMS Status: Normal/No Error", (225,40), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
 
             #indicators
             #gui_frame = AddImage(gui_frame, "traction_control.png", 500, 500, 0.2)
