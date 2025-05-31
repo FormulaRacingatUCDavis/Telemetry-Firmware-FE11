@@ -3,6 +3,7 @@ import time
 import multiprocessing as mp
 import numpy as np
 from mjpeg_streamer import MjpegServer, Stream
+from pathlib import Path
 
 class CameraFeed:
     def __init__(self, stream_ip="localhost", stream_port=8080, stream_quality=80, stream_fps=30):
@@ -89,7 +90,15 @@ class CameraFeed:
             nonlocal out
             nonlocal is_recording
             if not is_recording:
-                out = cv.VideoWriter(f"stream_recordings/{self.CurrentDateTime()}_WebCam_Video.mp4", fourcc, 20, (int(capture.get(3)), int(capture.get(4))))
+                recordings_dir = Path("stream_recordings")
+                recordings_dir.mkdir(parents=True, exist_ok=True)   # creates it (and parents) only if missing
+
+                out = cv.VideoWriter(
+                    str(recordings_dir / f"{self.CurrentDateTime()}_WebCam_Video.mp4"),
+                    fourcc,
+                    20,
+                    (int(capture.get(3)), int(capture.get(4)))
+                )
                 is_recording = True
 
         def EndRecording():
