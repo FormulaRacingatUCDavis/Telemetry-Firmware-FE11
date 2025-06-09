@@ -384,6 +384,7 @@ class PEIData:
         self.MAX_DATA_POINTS = 50
         self.MAX_QUEUE_SIZE = 5
         self.UPDATE_INTERVAL = 1
+        self.thread_stop_flag = False
 
         # PEI Status
         self.current_adc_queue = Queue(maxsize=self.MAX_QUEUE_SIZE)
@@ -426,7 +427,7 @@ class PEIData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.current_adc_queue.empty():
                     data.append(self.current_adc_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
@@ -440,6 +441,7 @@ class PEIData:
 
         thread = threading.Thread(target=update_graph)
         thread.start()
+        # thread.join()
 
     def CurrentReferenceADCGraph(self):
         data = []
@@ -454,7 +456,7 @@ class PEIData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while self.thread_stop_flag:
                 if not self.current_reference_adc_queue.empty():
                     data.append(self.current_reference_adc_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
@@ -468,6 +470,7 @@ class PEIData:
 
         thread = threading.Thread(target=update_graph)
         thread.start()
+        # thread.join()
 
     def BMSHITempGraph(self):
         data = []
@@ -482,7 +485,7 @@ class PEIData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.bms_hi_temp_queue.empty():
                     data.append(self.bms_hi_temp_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
@@ -496,6 +499,7 @@ class PEIData:
 
         thread = threading.Thread(target=update_graph)
         thread.start()
+        # thread.join()
 
     def BMSSOCGraph(self):
         data = []
@@ -510,7 +514,7 @@ class PEIData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.bms_soc_queue.empty():
                     data.append(self.bms_soc_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
@@ -524,6 +528,7 @@ class PEIData:
 
         thread = threading.Thread(target=update_graph)
         thread.start()
+        # thread.join()
 
     def BMSPackVoltageGraph(self):
         data = []
@@ -538,7 +543,7 @@ class PEIData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.bms_pack_voltage_queue.empty():
                     data.append(self.bms_pack_voltage_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
@@ -552,6 +557,7 @@ class PEIData:
 
         thread = threading.Thread(target=update_graph)
         thread.start()
+        # thread.join()
 
 class TNodeData:
     def __init__(self):

@@ -127,23 +127,47 @@ def dashboard_data():
 
     with ui.row().classes('flex justify-center items-start w-screen'):
         with ui.card(align_items='center'):
-            dashboard_stats.LabelDataInit()
+            pass
+            # dashboard_stats.LabelDataInit()
 
     with ui.grid(columns=1).classes('w-full'):
-        dashboard_stats.GraphsInit()
+        pass
+        # dashboard_stats.GraphsInit()
 
 
 @ui.page('/pei_data')
-def pei_data():
+async def pei_data():
+    await ui.context.client.connected()
+
     frucd_repeat_background()
     main_navigation_menu()
+
+    curr_data_src = app.storage.tab.get('data_source', pei_stats.CurrentADCGraph)
+    def set_data_src_directory(data_src_obj):
+        app.storage.tab['data_source'] = data_src_obj
+        pei_stats.thread_stop_flag = True
+        ui.navigate.reload()
+        pass
 
     with ui.row().classes('flex justify-center items-start w-screen'):
         with ui.card(align_items='center'):
             ui.button()
 
-    with ui.grid(columns=1).classes('w-full'):
-        pei_stats.GraphsInit()
+    '''with ui.grid(columns=1).classes('w-full'):
+        pei_stats.GraphsInit()'''
+
+    with ui.row().classes('flex justify-center items-start w-screen'):
+        with ui.card(align_items='center'):
+            pei_stats.thread_stop_flag = False
+            curr_data_src()
+
+            with ui.dropdown_button("Change Data Source", auto_close=True):
+                ui.item('Current ADC', on_click=lambda: set_data_src_directory(pei_stats.CurrentADCGraph))
+                ui.item('Current Reference ADC', on_click=lambda: set_data_src_directory(pei_stats.CurrentReferenceADCGraph))
+                ui.item('BMS HI Temp', on_click=lambda: set_data_src_directory(pei_stats.BMSHITempGraph))
+                ui.item('BMS SOC', on_click=lambda: set_data_src_directory(pei_stats.BMSSOCGraph))
+                ui.item('Pack Voltage', on_click=lambda: set_data_src_directory(pei_stats.BMSPackVoltageGraph))
+
 
 @ui.page('/t_node_data')
 def t_node_data():
@@ -155,7 +179,8 @@ def t_node_data():
             ui.button()
 
     with ui.grid(columns=1).classes('w-full'):
-        t_node_stats.GraphsInit()
+        pass
+        # t_node_stats.GraphsInit()
 
 @ui.page('/motor_controller_data')
 def motor_controller_data():
