@@ -10,16 +10,22 @@ class DBCDecoder:
         self.can_process.start()
 
     def ReadCan(self, can_queue):
-        dbc_db = cantools.database.load_file('FE12_DBC.dbc')
+        fe12_dbc_db = cantools.database.load_file('FE12_DBC.dbc')
+        mc_dbc_db = cantools.database.load_file('20240129 Gen5 CAN DB.dbc')
         can_bus = can.interface.Bus(channel='can0', interface='socketcan')
 
         while True:
             can_msg = can_bus.recv()
-            can_msg_name = dbc_db.get_message_by_frame_id(can_msg.arbitration_id).name
-            can_msg_decoded = dbc_db.decode_message(can_msg.arbitration_id, can_msg.data)
-
-            can_msg_decoded["CAN_MSG_Name"] = can_msg_name
+            try:
+                can_msg_name = fe12_dbc_db.get_message_by_frame_id(can_msg.arbitration_id).name
+                can_msg_decoded = fe12_dbc_db.decode_message(can_msg.arbitration_id, can_msg.data)
+                can_msg_decoded["CAN_MSG_Name"] = can_msg_name
+            except KeyError:
+                try:
+                    can_msg_name = mc_dbc_db.get_message_by_frame_id(can_msg.arbitration_id).name
+                    can_msg_decoded = mc_dbc_db.decode_message(can_msg.arbitration_id, can_msg.data)
+                    can_msg_decoded["CAN_MSG_Name"] = can_msg_name
+                except KeyError:
+                    pass
 
             can_queue.put(can_msg_decoded)
-
-            time.sleep(0.1)

@@ -74,7 +74,7 @@ class CameraFeed:
         server.start()
 
         # camera capture
-        capture = cv.VideoCapture(0, cv.CAP_ANY)
+        capture = cv.VideoCapture(0, cv.CAP_DSHOW)
         # self.capture = cv.VideoCapture(0, cv.CAP_V4L2) # Solution: https://stackoverflow.com/questions/77190490/usb-camera-doesnt-work-with-opencv-and-raspberry-pi
         capture.set(cv.CAP_PROP_FRAME_WIDTH, 640)
         capture.set(cv.CAP_PROP_FRAME_HEIGHT, 480)
@@ -122,6 +122,8 @@ class CameraFeed:
         while True:
             is_true, frame = capture.read()
 
+            frame = cv.flip(frame, 0)
+
             stream_no_gui.set_frame(frame)
 
             gui_frame = np.copy(frame)
@@ -167,7 +169,7 @@ class CameraFeed:
                 EndRecording()
 
             if __name__ == "__main__":
-                # cv.imshow('Camera', frame)
+                cv.imshow('Camera', frame)
                 if cv.waitKey(20) == ord(' '):
                     break
 
