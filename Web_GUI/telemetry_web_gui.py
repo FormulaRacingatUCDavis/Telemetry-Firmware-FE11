@@ -11,7 +11,7 @@ from camera_feed import CameraFeed
 from telemetry_dbc_decoder import DBCDecoder
 from telemetry_web_gui_graph_manager import DashboardData, PEIData, TNodeData
 import biscuit_trimmed
-import savvy_can_parser
+# import savvy_can_parser
 from plotly_resampler import FigureResampler
 
 # FRUCD Brand 2.0 Colors
@@ -275,7 +275,8 @@ def data_parser():
         if format_selection.value == 1:
             data = await run.cpu_bound(biscuit_trimmed.parse_biscuit, e.content.read())
         elif format_selection.value == 2:
-            data = await run.cpu_bound(savvy_can_parser.parse_savvy, e.content.read().decode('utf-8'))
+            #data = await run.cpu_bound(savvy_can_parser.parse_savvy, e.content.read().decode('utf-8'))
+            pass
 
         fig.update_layout(margin=dict(l=10, r=10, t=10, b=10),
                           autosize=True,
