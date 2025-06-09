@@ -58,7 +58,7 @@ class serialPlot:
 
     def readSerialStart(self):
         if self.thread == None:
-            self.thread = Thread(target=self.backgroundThread)
+            self.thread = Thread(target=self.backgroundThread, daemon=True)
             self.thread.start()
             # Block till we start receiving values
             while self.isReceiving != True:
@@ -239,17 +239,54 @@ def all_data():
     # frucd_repeat_background()
     main_navigation_menu()
 
+    baudRate = 38400
+    maxPlotLength = 200  # max length of the data arrays
+    packetNumBytes = 16
+    valNumBytes = 2  # short
+    graphProfiles = []
+    graphProfiles.append(GraphProfile(
+        4,
+        'Wheel Speed (CPS)',
+        ['Front Right', 'Front Left', 'Rear Right', 'Rear Left'],
+        ['FR', 'FL', 'RR', 'RL'],
+        [-100, 100]
+    ))
+    graphProfiles.append(GraphProfile(
+        1,
+        'Steering Angle (degrees)',
+        ['Wheel'],
+        ['W'],
+        [-200, 200]
+    ))
+
     update_interval = 20  # Update interval in milliseconds
 
-    # Set up a periodic timer to call the update function
-    if s:
-        if (s.charts[0] == None):
-            s.initCharts()
-        ui.timer(update_interval / 1000, s.getSerialData)
+    if (len(sys.argv) == 2):
+        # input port given as command line argument
+        portName = sys.argv[1]
+        print("Port " + portName + " supplied.")
     else:
-        print("failed to initialize serialplot")
+        # find port in use
+        ports = serial.tools.list_ports.comports()
+        if (len(ports)) < 1:
+            sys.exit("No port found")
+        portName = ports.pop().name
+        print("No port explicitly supplied, found port " + portName + ".")
 
-    ui.button('Pause/Resume', on_click=lambda: s.togglePause())
+    # instantiate serialPlot here
+    s = serialPlot(portName, baudRate, maxPlotLength, packetNumBytes, valNumBytes, graphProfiles)
+    s.readSerialStart()
+    s.initCharts()
+
+    s.update_timer = ui.timer(update_interval/1000, s.getSerialData)
+
+    ui.button('Pause/Resume', on_click=s.togglePause)
+
+    def cleanup():
+        s.update_timer.stop()
+        s.close()
+
+    ui.context.client.on_disconnect(cleanup)
 
 # TODO: ADD MAP, PLOTLY, LEFT/RIGHT SHELF, LOG VIEW
 
@@ -272,38 +309,5 @@ with ui.card(align_items='center').classes('fixed-center'):
                 '/camera_feed_no_gui', new_tab=False))
         ui.button('Data Explorer').classes(f'!bg-[{FRUCD_DARK_BLUE}]')
 
-ui.run(port=8000, show=False)
-
-if (len(sys.argv) == 2):
-    # input port given as command line argument
-    portName = sys.argv[1]
-    print("Port " + portName + " supplied.")
-else:
-    # find port in use
-    ports = serial.tools.list_ports.comports()
-    if (len(ports)) < 1:
-        sys.exit("No port found")
-    portName = ports.pop().name
-    print("No port explicitly supplied, found port " + portName + ".")
-baudRate = 38400
-maxPlotLength = 200  # max length of the data arrays
-packetNumBytes = 16
-valNumBytes = 2  # short
-graphProfiles = []
-graphProfiles.append(GraphProfile(
-    4,
-    'Wheel Speed (CPS)',
-    ['Front Right', 'Front Left', 'Rear Right', 'Rear Left'],
-    ['FR', 'FL', 'RR', 'RL'],
-    [-100, 100]
-))
-graphProfiles.append(GraphProfile(
-    1,
-    'Steering Angle (degrees)',
-    ['Wheel'],
-    ['W'],
-    [-200, 200]
-))
-s = serialPlot(portName, baudRate, maxPlotLength, packetNumBytes,
-               valNumBytes, graphProfiles)  # initialize variables
-s.readSerialStart()  # starts background thread
+if __name__ in {'__main__','__mp_main__'}:
+    ui.run(port=8000)
