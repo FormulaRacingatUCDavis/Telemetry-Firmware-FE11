@@ -10,8 +10,9 @@ import time
 class DashboardData:
     def __init__(self):
         self.MAX_DATA_POINTS = 50
-        self.MAX_QUEUE_SIZE = 5
+        self.MAX_QUEUE_SIZE = 0
         self.UPDATE_INTERVAL = 1
+        self.thread_stop_flag = False
 
         # Vehicle State
         self.hv_requested_queue = Queue(maxsize=self.MAX_QUEUE_SIZE)
@@ -58,8 +59,7 @@ class DashboardData:
         self.FrontWheelSpeedGraph()
         self.TCTorqueGraph()
 
-    def UpdateGraphs(self, can_data):
-        self.TorqueGraph().update_graph()
+    def UpdateData(self, can_data):
         if can_data.get("Torque") != None:
             self.torque_queue.put(can_data["Torque"])
         if can_data.get("Speed") != None:
@@ -70,6 +70,27 @@ class DashboardData:
             self.front_wheel_speed_queue.put(can_data["Front_Wheel_Speed"])
         if can_data.get("TC_Torque_Request") != None:
             self.tc_torque_queue.put(can_data["TC_Torque_Request"])
+        if can_data.get("HV_Requested") != None:
+            self.hv_requested_queue.put(can_data["HV_Requested"])
+        if can_data.get("Throttle1_Level") != None:
+            self.throttle1_level_queue.put(can_data["Throttle1_Level"])
+        if can_data.get("Throttle2_Level") != None:
+            self.throttle2_level_queue.put(can_data["Throttle2_Level"])
+        if can_data.get("Brake_Level") != None:
+            self.brake_level_queue.put(can_data["Brake_Level"])
+        if can_data.get("Direction") != None:
+            self.direction_command_queue.put(can_data["Direction"])
+        if can_data.get("Inverter_Enable") != None:
+            self.inverter_enable_queue.put(can_data["Inverter_Enable"])
+        if can_data.get("Discharge_Enable") != None:
+            self.discharge_enable_queue.put(can_data["Discharge_Enable"])
+        if can_data.get("Speed_Mode_Enable") != None:
+            self.speed_mode_enable_queue.put(can_data["Speed_Mode_Enable"])
+        if can_data.get("Torque_Limit") != None:
+            self.torque_limit_queue.put(can_data["Torque_Limit"])
+        if can_data.get("State") != None:
+            self.vehicle_state_queue.put(can_data["State"])
+
 
     def HVRequestedLabel(self):
         label = ui.label("HV Requested: No Data")
@@ -252,17 +273,16 @@ class DashboardData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.torque_queue.empty():
                     data.append(self.torque_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -280,17 +300,16 @@ class DashboardData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.speed_queue.empty():
                     data.append(self.speed_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -308,17 +327,16 @@ class DashboardData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.front_strain_queue.empty():
                     data.append(self.front_strain_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -336,17 +354,16 @@ class DashboardData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.front_wheel_speed_queue.empty():
                     data.append(self.front_wheel_speed_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -364,17 +381,16 @@ class DashboardData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.tc_torque_queue.empty():
                     data.append(self.tc_torque_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -433,9 +449,8 @@ class PEIData:
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
-                    fig.data[0].y = data[:]
-
                 if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    fig.data[0].y = data[:]
                     plot.update()
                     prev_time = time.time()
 
@@ -456,15 +471,14 @@ class PEIData:
 
         def update_graph():
             prev_time = time.time()
-            while self.thread_stop_flag:
+            while not self.thread_stop_flag:
                 if not self.current_reference_adc_queue.empty():
                     data.append(self.current_reference_adc_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
-                    fig.data[0].y = data[:]
-
                 if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    fig.data[0].y = data[:]
                     plot.update()
                     prev_time = time.time()
 
@@ -491,9 +505,8 @@ class PEIData:
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
-                    fig.data[0].y = data[:]
-
                 if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    fig.data[0].y = data[:]
                     plot.update()
                     prev_time = time.time()
 
@@ -520,9 +533,8 @@ class PEIData:
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
-                    fig.data[0].y = data[:]
-
                 if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    fig.data[0].y = data[:]
                     plot.update()
                     prev_time = time.time()
 
@@ -549,9 +561,8 @@ class PEIData:
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
-                    fig.data[0].y = data[:]
-
                 if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    fig.data[0].y = data[:]
                     plot.update()
                     prev_time = time.time()
 
@@ -562,8 +573,9 @@ class PEIData:
 class TNodeData:
     def __init__(self):
         self.MAX_DATA_POINTS = 50
-        self.MAX_QUEUE_SIZE = 5
+        self.MAX_QUEUE_SIZE = 0
         self.UPDATE_INTERVAL = 1
+        self.thread_stop_flag = False
 
         # Cooling Loop Temps
         self.inlet_water_temp_queue = Queue(maxsize=self.MAX_QUEUE_SIZE)
@@ -595,7 +607,7 @@ class TNodeData:
         self.InletWaterPressGraph()
         self.OutletWaterPressGraph()
         self.RLToeStrainGraph()
-        self.RLUBAArmStrainGraph()
+        self.RLUFAArmStrainGraph()
         self.RLUBAArmStrainGraph()
         self.RLLFAArmStrainGraph()
 
@@ -638,17 +650,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.inlet_water_temp_queue.empty():
                     data.append(self.inlet_water_temp_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -666,17 +677,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.outlet_water_temp_queue.empty():
                     data.append(self.outlet_water_temp_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -694,17 +704,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.air_in_rad_temp_queue.empty():
                     data.append(self.air_in_rad_temp_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -722,17 +731,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.air_out_rad_temp_queue.empty():
                     data.append(self.air_out_rad_temp_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -750,17 +758,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.wheel_speed_rr_queue.empty():
                     data.append(self.wheel_speed_rr_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -778,17 +785,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.wheel_speed_rl_queue.empty():
                     data.append(self.wheel_speed_rl_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -806,17 +812,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.inlet_water_press_queue.empty():
                     data.append(self.inlet_water_press_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -834,17 +839,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.outlet_water_press_queue.empty():
                     data.append(self.outlet_water_press_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -862,17 +866,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.rl_toe_strain_queue.empty():
                     data.append(self.rl_toe_strain_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -890,17 +893,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.rluf_aarm_strain_queue.empty():
-                    data.append(self.rluf_aarm_strain_queue.get())
+                    data.append(self.rlub_aarm_strain_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -918,17 +920,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.rlub_aarm_strain_queue.empty():
                     data.append(self.rlub_aarm_strain_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -946,17 +947,16 @@ class TNodeData:
 
         def update_graph():
             prev_time = time.time()
-            while True:
+            while not self.thread_stop_flag:
                 if not self.rllf_aarm_strain_queue.empty():
                     data.append(self.rllf_aarm_strain_queue.get())
                     if len(data) > self.MAX_DATA_POINTS:
                         data.pop(0)
 
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
                     fig.data[0].y = data[:]
-
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()

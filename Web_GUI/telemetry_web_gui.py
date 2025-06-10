@@ -48,7 +48,7 @@ def distribute_can():
                 can_data = dbc_can_decoder.can_queue.get()
                 match can_data["CAN_MSG_Name"]:
                     case "Dashboard_Vehicle_State":
-                        dashboard_stats.UpdateGraphs(can_data)
+                        dashboard_stats.UpdateData(can_data)
                         camera_stream.data_queue.put(can_data)
                     case "PEI_BMS_Status":
                         pei_stats.UpdateGraphs(can_data)
@@ -61,10 +61,10 @@ def distribute_can():
                     case "TelemNode_Wheel_Speed_Rear":
                         t_node_stats.UpdateGraphs(can_data)
                     case "Dashboard_Torque_Request":
-                        dashboard_stats.UpdateGraphs(can_data)
+                        dashboard_stats.UpdateData(can_data)
                         camera_stream.data_queue.put(can_data)
                     case "Dashboard_Random_Shit":
-                        dashboard_stats.UpdateGraphs(can_data)
+                        dashboard_stats.UpdateData(can_data)
                     case "PEI_Diagnostic_BMS_Data":
                         pei_stats.UpdateGraphs(can_data)
                     case "TelemNode_Strain_Gauges_Rear":
@@ -121,18 +121,38 @@ def camera_feed_no_gui():
     ui.interactive_image(f'http://{CAMERA_STREAM_IP}:8080/no_gui').style('margin:auto; height:60%; width:60%')
 
 @ui.page('/dashboard_data')
-def dashboard_data():
+async def dashboard_data():
+    await ui.context.client.connected()
+
     frucd_repeat_background()
     main_navigation_menu()
 
+    curr_data_src = app.storage.tab.get('dash_data_source', dashboard_stats.TorqueGraph)
+
+    def set_data_src_directory(data_src_obj):
+        app.storage.tab['dash_data_source'] = data_src_obj
+        dashboard_stats.thread_stop_flag = True
+        ui.navigate.reload()
+
     with ui.row().classes('flex justify-center items-start w-screen'):
         with ui.card(align_items='center'):
-            pass
-            # dashboard_stats.LabelDataInit()
+            dashboard_stats.LabelDataInit()
 
-    with ui.grid(columns=1).classes('w-full'):
-        pass
+    # with ui.grid(columns=1).classes('w-full'):
+        # pass
         # dashboard_stats.GraphsInit()
+
+    with ui.row().classes('flex justify-center items-start w-screen'):
+        with ui.card(align_items='center'):
+            dashboard_stats.thread_stop_flag = False
+            curr_data_src()
+
+            with ui.dropdown_button("Change Data Source", auto_close=True):
+                ui.item('Torque', on_click=lambda: set_data_src_directory(dashboard_stats.TorqueGraph))
+                ui.item('Speed', on_click=lambda: set_data_src_directory(dashboard_stats.SpeedGraph))
+                ui.item('Front Strain Gauge', on_click=lambda: set_data_src_directory(dashboard_stats.FrontStrainGraph))
+                ui.item('Front Wheel Speed', on_click=lambda: set_data_src_directory(dashboard_stats.FrontWheelSpeedGraph))
+                ui.item('TC Torque', on_click=lambda: set_data_src_directory(dashboard_stats.TCTorqueGraph))
 
 
 @ui.page('/pei_data')
@@ -142,12 +162,11 @@ async def pei_data():
     frucd_repeat_background()
     main_navigation_menu()
 
-    curr_data_src = app.storage.tab.get('data_source', pei_stats.CurrentADCGraph)
+    curr_data_src = app.storage.tab.get('pei_data_source', pei_stats.CurrentADCGraph)
     def set_data_src_directory(data_src_obj):
-        app.storage.tab['data_source'] = data_src_obj
+        app.storage.tab['pei_data_source'] = data_src_obj
         pei_stats.thread_stop_flag = True
         ui.navigate.reload()
-        pass
 
     with ui.row().classes('flex justify-center items-start w-screen'):
         with ui.card(align_items='center'):
@@ -170,17 +189,45 @@ async def pei_data():
 
 
 @ui.page('/t_node_data')
-def t_node_data():
+async def t_node_data():
+    await ui.context.client.connected()
+
     frucd_repeat_background()
     main_navigation_menu()
+
+    curr_data_src = app.storage.tab.get('tnode_data_source', t_node_stats.InletWaterTempGraph)
+
+    def set_data_src_directory(data_src_obj):
+        app.storage.tab['tnode_data_source'] = data_src_obj
+        t_node_stats.thread_stop_flag = True
+        ui.navigate.reload()
 
     with ui.row().classes('flex justify-center items-start w-screen'):
         with ui.card(align_items='center'):
             ui.button()
 
-    with ui.grid(columns=1).classes('w-full'):
-        pass
+    # with ui.grid(columns=1).classes('w-full'):
+        # pass
         # t_node_stats.GraphsInit()
+
+    with ui.row().classes('flex justify-center items-start w-screen'):
+        with ui.card(align_items='center'):
+            t_node_stats.thread_stop_flag = False
+            curr_data_src()
+
+            with ui.dropdown_button("Change Data Source", auto_close=True):
+                ui.item('Intlet Water Temp', on_click=lambda: set_data_src_directory(t_node_stats.InletWaterTempGraph))
+                ui.item('Outlet Water Temp', on_click=lambda: set_data_src_directory(t_node_stats.OutletWaterTempGraph))
+                ui.item('Air In Radiator Temp', on_click=lambda: set_data_src_directory(t_node_stats.AirInRadTempGraph))
+                ui.item('Air Out Radiator Temp', on_click=lambda: set_data_src_directory(t_node_stats.AirOutRadTempGraph))
+                ui.item('Wheel Speed RR', on_click=lambda: set_data_src_directory(t_node_stats.WheelSpeedRRGraph))
+                ui.item('Wheel Speed RL', on_click=lambda: set_data_src_directory(t_node_stats.WheelSpeedRLGraph))
+                ui.item('Inlet Water Pressure', on_click=lambda: set_data_src_directory(t_node_stats.InletWaterPressGraph))
+                ui.item('Outlet Water Pressure', on_click=lambda: set_data_src_directory(t_node_stats.OutletWaterPressGraph))
+                ui.item('RL Toe Strain Gauge', on_click=lambda: set_data_src_directory(t_node_stats.RLToeStrainGraph))
+                ui.item('RLUF A-Arm Strain Gauge', on_click=lambda: set_data_src_directory(t_node_stats.RLUFAArmStrainGraph))
+                ui.item('RLUB A-Arm Strain Gauge', on_click=lambda: set_data_src_directory(t_node_stats.RLUBAArmStrainGraph))
+                ui.item('RLLF A-Arm Strain Gauge', on_click=lambda: set_data_src_directory(t_node_stats.RLLFAArmStrainGraph))
 
 @ui.page('/motor_controller_data')
 def motor_controller_data():
