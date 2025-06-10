@@ -123,6 +123,7 @@ class CameraFeed:
             is_true, frame = capture.read()
 
             frame = cv.flip(frame, 0)
+            frame = cv.flip(frame, 1)
 
             stream_no_gui.set_frame(frame)
 
