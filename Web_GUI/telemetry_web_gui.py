@@ -17,7 +17,7 @@ from plotly_resampler import FigureResampler
 # FRUCD Brand 2.0 Colors
 FRUCD_DARK_BLUE = '#003a70'
 
-CAMERA_STREAM_IP = "localhost"
+CAMERA_STREAM_IP = "10.9.141.1" # USE "localhost" FOR LAPTOP
 
 app.add_static_files('/static', 'static')
 
@@ -75,6 +75,17 @@ def distribute_can():
                         pei_stats.UpdateGraphs(can_data)
                     case "TelemNode_Strain_Gauges_Rear":
                         t_node_stats.UpdateGraphs(can_data)
+                    case "M160_Temperature_Set_1":
+                        if can_data.get("INV_Module_C_Temp") != None:
+                            camera_stream.inv_mod_c_temp.value = can_data["INV_Module_C_Temp"]
+                        if can_data.get("INV_Module_B_Temp") != None:
+                            camera_stream.inv_mod_c_temp.value = can_data["INV_Module_B_Temp"]
+                        if can_data.get("INV_Module_A_Temp") != None:
+                            camera_stream.inv_mod_c_temp.value = can_data["INV_Module_A_Temp"]
+                    case "M165_Motor_Position_Info":
+                        if can_data.get("INV_Motor_Speed"):
+                            camera_stream.inv_motor_speed.value = can_data["INV_Motor_Speed"]
+
 
     thread = threading.Thread(target=distribute_data)
     thread.start()

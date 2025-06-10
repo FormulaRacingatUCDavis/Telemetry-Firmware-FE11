@@ -13,12 +13,25 @@ class CameraFeed:
         self.STREAM_IP = stream_ip
         self.STREAM_PORT = stream_port
         self.record_stream = mp.Value('i', False)
-        self.vehicle_speed = mp.Value('i', 0)
         self.throttle_percent = mp.Value('i', 0)
         self.brake_percent = mp.Value('i', 0)
+        self.inv_mod_c_temp = mp.Value('i', 0)
+        self.inv_mod_b_temp = mp.Value('i', 0)
+        self.inv_mod_a_temp = mp.Value('i', 0)
+        self.inv_motor_speed = mp.Value('i', 0)
         self.data_queue = mp.Queue()
 
-        self.stream_process = mp.Process(target=self.CameraMain, args=(self.record_stream, self.data_queue, self.vehicle_speed, self.throttle_percent, self.brake_percent))
+        self.stream_process = mp.Process(target=self.CameraMain,
+                                         args=(self.record_stream,
+                                               self.data_queue,
+                                               self.throttle_percent,
+                                               self.brake_percent,
+                                               self.inv_mod_c_temp,
+                                               self.inv_mod_b_temp,
+                                               self.inv_mod_a_temp,
+                                               self.inv_motor_speed
+                                               )
+                                         )
         self.stream_process.start()
 
     def ToggleRecording(self):
@@ -66,7 +79,7 @@ class CameraFeed:
 
         return frame
 
-    def CameraMain(self, record_stream, data_queue, vehicle_speed, throttle_percent, brake_percent):
+    def CameraMain(self, record_stream, data_queue, throttle_percent, brake_percent, inv_mod_c_temp, inv_mod_b_temp, inv_mod_a_temp, inv_motor_speed):
         # camera stream
         stream_gui = Stream("gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)  # size = (1920, 1080) is optional
         stream_no_gui = Stream("no_gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)
@@ -77,7 +90,7 @@ class CameraFeed:
         server.start()
 
         # camera capture
-        capture = cv.VideoCapture(0, cv.CAP_DSHOW)
+        capture = cv.VideoCapture(0, cv.CAP_ANY) # USE cv.CAP_DSHOW FOR LAPTOP
         # self.capture = cv.VideoCapture(0, cv.CAP_V4L2) # Solution: https://stackoverflow.com/questions/77190490/usb-camera-doesnt-work-with-opencv-and-raspberry-pi
         capture.set(cv.CAP_PROP_FRAME_WIDTH, 640)
         capture.set(cv.CAP_PROP_FRAME_HEIGHT, 480)
@@ -145,8 +158,12 @@ class CameraFeed:
             gui_frame = self.AddImage(gui_frame, "static/FRUCDHeader.png", 0, 0, 0.3)
 
             # gauges
-            gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, vehicle_speed.value, 1)
+            gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, inv_motor_speed.value, 1)
             gui_frame = self.AddThrottleBrakes(gui_frame, 580, 470, throttle_percent.value, brake_percent.value)
+
+            # mc temp
+            inv_mod_temp = (inv_mod_c_temp.value + inv_mod_b_temp.value + inv_mod_a_temp.value) / 3
+            cv.putText(gui_frame, f"INV Motor Temp: {inv_mod_temp}", (255,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
 
             # vehicle status
             # cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
