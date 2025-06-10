@@ -56,8 +56,8 @@ class CameraFeed:
         return frame
 
     def AddThrottleBrakes(self, frame, x_pos, y_pos, throttle_percent, brake_percent):
-        throttle_norm = throttle_percent * (y_pos - (y_pos - 100))
-        brake_norm = brake_percent * (y_pos - (y_pos - 100))
+        throttle_norm = throttle_percent / 100 * (y_pos - (y_pos - 100))
+        brake_norm = brake_percent / 100 * (y_pos - (y_pos - 100))
         cv.rectangle(frame, (x_pos,y_pos), (x_pos+20,y_pos-int(throttle_norm)), (0,255,0), -1)
         cv.rectangle(frame, (x_pos+30, y_pos), (x_pos+50,y_pos-int(brake_norm)), (0,0,255), -1)
 
