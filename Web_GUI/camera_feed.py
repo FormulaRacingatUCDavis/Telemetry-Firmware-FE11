@@ -169,7 +169,7 @@ class CameraFeed:
                 EndRecording()
 
             if __name__ == "__main__":
-                cv.imshow('Camera', frame)
+                # cv.imshow('Camera', frame)
                 if cv.waitKey(20) == ord(' '):
                     break
 

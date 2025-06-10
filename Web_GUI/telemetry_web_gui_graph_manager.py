@@ -382,7 +382,7 @@ class DashboardData:
 class PEIData:
     def __init__(self):
         self.MAX_DATA_POINTS = 50
-        self.MAX_QUEUE_SIZE = 5
+        self.MAX_QUEUE_SIZE = 0
         self.UPDATE_INTERVAL = 1
         self.thread_stop_flag = False
 
@@ -435,9 +435,9 @@ class PEIData:
 
                     fig.data[0].y = data[:]
 
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -464,9 +464,9 @@ class PEIData:
 
                     fig.data[0].y = data[:]
 
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -493,9 +493,9 @@ class PEIData:
 
                     fig.data[0].y = data[:]
 
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -522,9 +522,9 @@ class PEIData:
 
                     fig.data[0].y = data[:]
 
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
@@ -551,9 +551,9 @@ class PEIData:
 
                     fig.data[0].y = data[:]
 
-                    if time.time() - prev_time >= self.UPDATE_INTERVAL:
-                        plot.update()
-                        prev_time = time.time()
+                if time.time() - prev_time >= self.UPDATE_INTERVAL:
+                    plot.update()
+                    prev_time = time.time()
 
         thread = threading.Thread(target=update_graph)
         thread.start()
