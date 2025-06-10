@@ -20,12 +20,12 @@ class DBCDecoder:
                 can_msg_name = fe12_dbc_db.get_message_by_frame_id(can_msg.arbitration_id).name
                 can_msg_decoded = fe12_dbc_db.decode_message(can_msg.arbitration_id, can_msg.data)
                 can_msg_decoded["CAN_MSG_Name"] = can_msg_name
+                can_queue.put(can_msg_decoded)
             except KeyError:
                 try:
                     can_msg_name = mc_dbc_db.get_message_by_frame_id(can_msg.arbitration_id).name
                     can_msg_decoded = mc_dbc_db.decode_message(can_msg.arbitration_id, can_msg.data)
                     can_msg_decoded["CAN_MSG_Name"] = can_msg_name
+                    can_queue.put(can_msg_decoded)
                 except KeyError:
                     pass
-
-            can_queue.put(can_msg_decoded)
