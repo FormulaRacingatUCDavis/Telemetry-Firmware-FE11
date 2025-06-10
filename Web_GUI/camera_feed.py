@@ -13,9 +13,12 @@ class CameraFeed:
         self.STREAM_IP = stream_ip
         self.STREAM_PORT = stream_port
         self.record_stream = mp.Value('i', False)
+        self.vehicle_speed = mp.Value('i', 0)
+        self.throttle_percent = mp.Value('i', 0)
+        self.brake_percent = mp.Value('i', 0)
         self.data_queue = mp.Queue()
 
-        self.stream_process = mp.Process(target=self.CameraMain, args=(self.record_stream, self.data_queue))
+        self.stream_process = mp.Process(target=self.CameraMain, args=(self.record_stream, self.data_queue, self.vehicle_speed, self.throttle_percent, self.brake_percent))
         self.stream_process.start()
 
     def ToggleRecording(self):
@@ -63,7 +66,7 @@ class CameraFeed:
 
         return frame
 
-    def CameraMain(self, record_stream, data_queue):
+    def CameraMain(self, record_stream, data_queue, vehicle_speed, throttle_percent, brake_percent):
         # camera stream
         stream_gui = Stream("gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)  # size = (1920, 1080) is optional
         stream_no_gui = Stream("no_gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)
@@ -116,9 +119,6 @@ class CameraFeed:
             if __name__ == "__main__":
                 cv.destroyAllWindows()
 
-        vehicle_speed = 0
-        throttle_percent = 0
-        brake_percent = 0
         while True:
             is_true, frame = capture.read()
 
@@ -132,21 +132,21 @@ class CameraFeed:
             gui_frame_y_dim = gui_frame.shape[1]
 
             # data updates
-            if not data_queue.empty():
+            '''if not data_queue.empty():
                 can_data = data_queue.get()
                 if can_data.get("Speed") != None:
                     vehicle_speed = can_data["Speed"]
                 if can_data.get("Throttle1_Level") != None:
                     throttle_percent = can_data["Throttle1_Level"]
                 if can_data.get("Brake_Level") != None:
-                    brake_percent = can_data["Brake_Level"]
+                    brake_percent = can_data["Brake_Level"]'''
 
             # logo
             gui_frame = self.AddImage(gui_frame, "static/FRUCDHeader.png", 0, 0, 0.3)
 
             # gauges
-            gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, vehicle_speed, 1)
-            gui_frame = self.AddThrottleBrakes(gui_frame, 580, 470, throttle_percent, brake_percent)
+            gui_frame = self.AddSpeedometer(gui_frame, int(gui_frame_y_dim/2), gui_frame_x_dim-10, vehicle_speed.value, 1)
+            gui_frame = self.AddThrottleBrakes(gui_frame, 580, 470, throttle_percent.value, brake_percent.value)
 
             # vehicle status
             # cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)

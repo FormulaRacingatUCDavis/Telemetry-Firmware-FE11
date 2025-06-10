@@ -49,7 +49,11 @@ def distribute_can():
                 match can_data["CAN_MSG_Name"]:
                     case "Dashboard_Vehicle_State":
                         dashboard_stats.UpdateData(can_data)
-                        camera_stream.data_queue.put(can_data)
+                        # camera_stream.data_queue.put(can_data)
+                        if can_data.get("Throttle1_Level") != None:
+                            camera_stream.throttle_percent.value = can_data["Throttle1_Level"]
+                        if can_data.get("Brake_Level") != None:
+                            camera_stream.brake_percent.value = can_data["Brake_Level"]
                     case "PEI_BMS_Status":
                         pei_stats.UpdateGraphs(can_data)
                     case "PEI_Status":
@@ -62,7 +66,9 @@ def distribute_can():
                         t_node_stats.UpdateGraphs(can_data)
                     case "Dashboard_Torque_Request":
                         dashboard_stats.UpdateData(can_data)
-                        camera_stream.data_queue.put(can_data)
+                        # camera_stream.data_queue.put(can_data)
+                        if can_data.get("Speed") != None:
+                            camera_stream.vehicle_speed.value = can_data["Speed"]
                     case "Dashboard_Random_Shit":
                         dashboard_stats.UpdateData(can_data)
                     case "PEI_Diagnostic_BMS_Data":
