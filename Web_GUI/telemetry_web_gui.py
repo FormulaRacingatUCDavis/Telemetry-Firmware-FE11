@@ -67,8 +67,6 @@ def distribute_can():
                     case "Dashboard_Torque_Request":
                         dashboard_stats.UpdateData(can_data)
                         # camera_stream.data_queue.put(can_data)
-                        if can_data.get("Speed") != None:
-                            camera_stream.vehicle_speed.value = can_data["Speed"]
                     case "Dashboard_Random_Shit":
                         dashboard_stats.UpdateData(can_data)
                     case "PEI_Diagnostic_BMS_Data":
