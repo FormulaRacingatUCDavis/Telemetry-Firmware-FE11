@@ -15,9 +15,9 @@ class CameraFeed:
         self.record_stream = mp.Value('i', False)
         self.throttle_percent = mp.Value('i', 0)
         self.brake_percent = mp.Value('i', 0)
-        self.inv_mod_c_temp = mp.Value('i', 0)
-        self.inv_mod_b_temp = mp.Value('i', 0)
-        self.inv_mod_a_temp = mp.Value('i', 0)
+        self.inv_mod_c_temp = mp.Value('f', 0)
+        self.inv_mod_b_temp = mp.Value('f', 0)
+        self.inv_mod_a_temp = mp.Value('f', 0)
         self.inv_motor_speed = mp.Value('i', 0)
         self.data_queue = mp.Queue()
 
