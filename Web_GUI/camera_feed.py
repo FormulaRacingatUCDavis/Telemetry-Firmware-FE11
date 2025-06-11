@@ -63,11 +63,11 @@ class CameraFeed:
         return frame
 
     def AddSpeedometer(self, frame, x_pos, y_pos, rpm, scale=1):
-        speed = rpm * 50.2655 * 60 / 63360 # rpm to mph
+        # speed = rpm * 50.2655 * 60 / 63360 # rpm to mph
 
-        normalized_value = ((speed - 0) / (100 - 0)) * (360 - 180) + 180 # for speedometer testing
+        normalized_value = ((rpm - 0) / (7000 - 0)) * (360 - 180) + 180 # for speedometer testing
         cv.ellipse(frame, (x_pos,y_pos), (100,100), 0, 180, normalized_value, (0,183,255), 10)
-        cv.putText(frame, str(speed), (x_pos - 25, y_pos-25), cv.FONT_HERSHEY_DUPLEX, scale, (0,183,233), 2)
+        cv.putText(frame, str(rpm), (x_pos - 25, y_pos-25), cv.FONT_HERSHEY_DUPLEX, scale * 0.75, (0,183,233), 2)
 
         return frame
 
@@ -163,7 +163,7 @@ class CameraFeed:
 
             # mc temp
             inv_mod_temp = (inv_mod_c_temp.value + inv_mod_b_temp.value + inv_mod_a_temp.value) / 3
-            cv.putText(gui_frame, f"INV Motor Temp: {inv_mod_temp}", (255,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
+            cv.putText(gui_frame, f"INV Motor Temp: {inv_mod_temp:.2f}C", (255,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (0,183,233), 1)
 
             # vehicle status
             # cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)
