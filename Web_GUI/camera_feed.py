@@ -19,6 +19,7 @@ class CameraFeed:
         self.inv_mod_b_temp = mp.Value('f', 0)
         self.inv_mod_a_temp = mp.Value('f', 0)
         self.inv_motor_speed = mp.Value('i', 0)
+        self.cur_adc = mp.Value('i', 0)
         self.data_queue = mp.Queue()
 
         self.stream_process = mp.Process(target=self.CameraMain,
@@ -29,7 +30,8 @@ class CameraFeed:
                                                self.inv_mod_c_temp,
                                                self.inv_mod_b_temp,
                                                self.inv_mod_a_temp,
-                                               self.inv_motor_speed
+                                               self.inv_motor_speed,
+                                               self.cur_adc
                                                )
                                          )
         self.stream_process.start()
@@ -79,7 +81,7 @@ class CameraFeed:
 
         return frame
 
-    def CameraMain(self, record_stream, data_queue, throttle_percent, brake_percent, inv_mod_c_temp, inv_mod_b_temp, inv_mod_a_temp, inv_motor_speed):
+    def CameraMain(self, record_stream, data_queue, throttle_percent, brake_percent, inv_mod_c_temp, inv_mod_b_temp, inv_mod_a_temp, inv_motor_speed, cur_adc):
         # camera stream
         stream_gui = Stream("gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)  # size = (1920, 1080) is optional
         stream_no_gui = Stream("no_gui", quality=self.STREAM_QUALITY, fps=self.STREAM_FPS)
@@ -163,7 +165,8 @@ class CameraFeed:
 
             # mc temp
             inv_mod_temp = (inv_mod_c_temp.value + inv_mod_b_temp.value + inv_mod_a_temp.value) / 3
-            cv.putText(gui_frame, f"INV Motor Temp: {inv_mod_temp:.2f}C", (255,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (0,183,233), 1)
+            cv.putText(gui_frame, f"INV Motor Temp: {inv_mod_temp:.2f}C", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (0,183,233), 2)
+            cv.putText(gui_frame, f"Current ADC: {cur_adc.value}", (225, 40), cv.FONT_HERSHEY_DUPLEX, 0.5,(0, 183, 233), 2)
 
             # vehicle status
             # cv.putText(gui_frame, "Vehicle State: Precharge", (225,20), cv.FONT_HERSHEY_DUPLEX, 0.5, (255,255,255), 1)

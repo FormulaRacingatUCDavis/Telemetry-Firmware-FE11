@@ -58,6 +58,8 @@ def distribute_can():
                         pei_stats.UpdateGraphs(can_data)
                     case "PEI_Status":
                         pei_stats.UpdateGraphs(can_data)
+                        if can_data.get("Current_ADC") != None:
+                            camera_stream.cur_adc.value = can_data["Current_ADC"]
                     case "TelemNode_Cooling_Loop_Temps":
                         t_node_stats.UpdateGraphs(can_data)
                     case "TelemNode_Cool_Loop_Pressures":
