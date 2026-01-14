@@ -6,7 +6,7 @@ from mjpeg_streamer import MjpegServer, Stream
 from pathlib import Path
 
 class CameraFeed:
-    def __init__(self, stream_ip="localhost", stream_port=8080, stream_quality=80, stream_fps=30):
+    def __init__(self, stream_ip="localhost", stream_port=8090, stream_quality=80, stream_fps=30):
         # camera stream
         self.STREAM_QUALITY = stream_quality
         self.STREAM_FPS = stream_fps
